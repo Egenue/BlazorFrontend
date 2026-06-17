@@ -1,0 +1,639 @@
+@page "/delivery"
+@inject ApiClient ApiClient
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@using BlazorFrontend.lib
+@using BlazorFrontend.Models
+
+<div class="bg-white border border-slate-150 rounded-2xl shadow-xs p-6 md:p-8 space-y-8 max-w-5xl mx-auto shadow-teal-100/30">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-teal-100 pb-5 gap-4">
+        <div>
+            <span class="text-[10px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 uppercase tracking-widest">
+                Form 3: Postpartum Delivery Care
+            </span>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
+                @(ExistingRecord != null ? "Edit Delivery Record" : "Digitize New Delivery Record")
+            </h2>
+            <p class="text-xs text-slate-500 font-sans mt-0.5">
+                Postpartum safety checks, medical history tracking, and physical outcome logs
+            </p>
+        </div>
+        <button type="button" @onclick="Cancel" class="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-all cursor-pointer">
+            Back to List
+        </button>
+    </div>
+
+    <EditForm Model="this" OnSubmit="HandleSubmit" class="space-y-8">
+        <div class="bg-teal-50/50 p-5 rounded-xl border border-teal-100/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="w-full max-w-md">
+                <label class="block text-xs font-bold text-teal-950 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Select Enrolled Screening ID <span class="text-red-500">*</span>
+                </label>
+                
+                @if (ExistingRecord != null)
+                {
+                    <div class="bg-white border border-teal-200 px-4 py-2.5 rounded-lg font-mono font-bold text-slate-950 flex items-center justify-between shadow-xs">
+                        <span>@screeningId</span>
+                        <span class="text-[10px] uppercase text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            Locked
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-2">
+                        <div class="relative">
+                            <input type="text" @bind="idSearchQuery" @bind:event="oninput" placeholder="Type to search ID..." class="block w-full px-3 py-2 bg-white border border-slate-200 focus:border-teal-500 text-slate-900 font-mono text-sm rounded-lg shadow-xs" />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <select required disabled="@ReadOnly" @bind="screeningId" @bind:event="oninput" class="block w-full px-3 py-2.5 bg-white border border-slate-200 text-slate-900 font-mono text-sm font-bold rounded-lg shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden">
+                            <option value="">-- Dropdown Enrolled patient IDs (@FilteredCandidateList.Count found) --</option>
+                            @foreach (var cand in FilteredCandidateList)
+                            {
+                                <option value="@cand.screeningId">
+                                    @cand.screeningId - @cand.healthFacility (Active Enrollment)
+                                </option>
+                            }
+                        </select>
+                        @if (CandidateEnrolledList.Count == 0)
+                        {
+                            <p class="mt-1.5 text-[11px] text-amber-600 font-medium">
+                                &bull; No enrolled, active participants match. Select Form 2 to enroll patients first.
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="w-full sm:w-auto">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    Interview Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" required disabled="@ReadOnly" max="@DateTime.Now.ToString("yyyy-MM-dd")" @bind="dateOfInterview" @bind:event="oninput" class="block px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(screeningId) && matchedHeight.HasValue)
+        {
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex justify-between items-center flex-wrap gap-2">
+                <span>Height matched from Enrollment: <strong>@matchedHeight.Value cm</strong></span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-400">Postpartum Body Mass Index (BMI):</span>
+                    <span class="px-3 py-1 bg-slate-800 text-white font-mono rounded-lg font-bold text-xs">
+                        @GetBmiString()
+                    </span>
+                </div>
+            </div>
+        }
+
+        <!-- Section A: Physical Examination -->
+        <div class="space-y-4">
+            <h3 class="text-md font-bold text-slate-900 border-b border-slate-100 pb-2">
+                A. Physical Examination (Postpartum Status)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Postpartum Weight (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" step="0.1" min="40" max="240" required disabled="@ReadOnly" placeholder="--.- kg" @bind="motherWeightKg" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-hidden" />
+                    @if (motherWeightKg.HasValue && (motherWeightKg < 40 || motherWeightKg > 240))
+                    {
+                        <p class="text-xs text-red-500 mt-1">Weight: 40-240 kg</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Temperature (&deg;C) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex">
+                        <input type="number" step="0.1" min="35" max="42" required disabled="@ReadOnly" placeholder="--.-" @bind="temperatureC" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-l-lg text-slate-900 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-hidden" />
+                        <select @bind="tempMethod" disabled="@ReadOnly" class="px-2 py-2 bg-slate-50 border border-slate-200 border-l-0 rounded-r-lg text-xs text-slate-600">
+                            <option value="Oral">Oral</option>
+                            <option value="Axillary">Axillary</option>
+                            <option value="Tympanic">Tympanic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Respiratory Rate / Pulse Rate <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="respiratoryRate" @bind:event="oninput" class="block w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium" placeholder="RR" />
+                            <span class="absolute right-3 top-2.5 text-[9px] font-black text-slate-400 uppercase">RR</span>
+                        </div>
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="pulseRate" @bind:event="oninput" class="block w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium" placeholder="PR" />
+                            <span class="absolute right-3 top-2.5 text-[9px] font-black text-slate-400 uppercase">PR</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Blood Pressure (Sys/Dia) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center gap-1.5">
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="bloodPressureSys" @bind:event="oninput" class="block w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-center font-mono" placeholder="Sys" />
+                            <span class="absolute right-2 top-3 text-[8px] font-black text-slate-300 uppercase tracking-tighter">Sys</span>
+                        </div>
+                        <span class="text-slate-400 font-bold">&#47;</span>
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="bloodPressureDia" @bind:event="oninput" class="block w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-center font-mono" placeholder="Dia" />
+                            <span class="absolute right-2 top-3 text-[8px] font-black text-slate-300 uppercase tracking-tighter">Dia</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Oxygen Saturation <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="number" min="85" max="100" required disabled="@ReadOnly" placeholder="---" @bind="oxygenSaturation" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm pr-10" />
+                        <span class="absolute right-3 top-2 text-slate-400 text-sm font-bold">%</span>
+                        @if (oxygenSaturation.HasValue && (oxygenSaturation < 85 || oxygenSaturation > 100))
+                        {
+                            <p class="text-xs text-red-500 mt-1">O₂ Sat: 85-100%</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Oxygen administration source <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach (var source in new[] { "On room air", "With supplemental oxygen" })
+                        {
+                            <button type="button" disabled="@ReadOnly" @onclick="@(() => oxygenSource = source)" class="py-2 px-2 border text-xs font-semibold rounded-lg transition-all cursor-pointer @(oxygenSource == source ? "border-teal-600 bg-teal-50 text-teal-700 font-bold" : "border-slate-200 bg-white text-slate-500")">
+                                @source
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <VitalAlerts Results="@(new List<ValidationResult?> { bpStatus, tempStatus, rrStatus, prStatus, bmiStatus })" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
+                <div>
+                    <label class="inline-flex items-center gap-2 cursor-pointer mt-2">
+                        <input type="checkbox" disabled="@ReadOnly" @bind="bmiUnknown" class="rounded border-slate-200 text-teal-600 focus:ring-teal-500 h-4 w-4" />
+                        <span class="text-xs text-slate-700 font-medium">Body Mass Index post-partum is unknown</span>
+                    </label>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Abnormality on physical exam of mother? <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach (var choice in new[] { "Yes", "No" })
+                        {
+                            <button type="button" disabled="@ReadOnly" @onclick="@(() => motherExamAbnormal = choice)" class="py-2 px-2 border text-xs font-semibold rounded-lg transition-all cursor-pointer @(motherExamAbnormal == choice ? (choice == "Yes" ? "border-rose-600 bg-rose-50 text-rose-700 font-bold" : "border-emerald-600 bg-emerald-50 text-emerald-700 font-bold") : "border-slate-200 bg-white text-slate-500 hover:bg-slate-55")">
+                                @choice
+                            </button>
+                        }
+                    </div>
+
+                    @if (motherExamAbnormal == "Yes")
+                    {
+                        <div class="pt-1.5 animate-slide-in">
+                            <input type="text" required disabled="@ReadOnly" @bind="motherExamAbnormalSpecify" placeholder="Specify physical exam abnormality details" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Section C: Delivery History -->
+        <div class="space-y-4">
+            <h3 class="text-md font-bold text-slate-900 border-b border-slate-100 pb-2">
+                C. Delivery History
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Date of Delivery <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" required disabled="@ReadOnly" @bind="dateOfDelivery" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-teal-500" />
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Time of Delivery (24-Hour) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" required disabled="@ReadOnly" @bind="timeOfDelivery" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-mono" />
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Where was the infant delivered? <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="deliveryLocation" disabled="@ReadOnly" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value="Bondo">Bondo</option>
+                        <option value="Lumumba">Lumumba</option>
+                        <option value="Siaya">Siaya</option>
+                        <option value="Other hospital/clinic">Other hospital/clinic (specify)</option>
+                        <option value="Home">Home</option>
+                        <option value="Other Location">Other location (specify)</option>
+                    </select>
+                </div>
+
+                @if (deliveryLocation == "Other hospital/clinic" || deliveryLocation == "Other Location")
+                {
+                    <div class="col-span-1 md:col-span-3">
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Specify Location Details <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" required disabled="@ReadOnly" @bind="deliveryLocationSpecify" placeholder="Insert designated hospital/clinic or custom location" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                    </div>
+                }
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Who delivered the child? <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="deliveredBy" disabled="@ReadOnly" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value="Doctor">Doctor</option>
+                        <option value="Clinical Officer">Clinical Officer</option>
+                        <option value="Nurse">Nurse</option>
+                        <option value="Midwife">Midwife</option>
+                        <option value="Traditional Birth Attendant">Traditional Birth Attendant</option>
+                        <option value="Village Health Worker">Village Health Worker</option>
+                        <option value="Other">Other (specify)</option>
+                        <option value="Don't know">Don't know</option>
+                    </select>
+                </div>
+
+                @if (deliveredBy == "Other")
+                {
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Specify Delivery Personnel <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" required disabled="@ReadOnly" @bind="deliveredBySpecify" placeholder="Enter custom assistant role" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                    </div>
+                }
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Mode of Delivery? <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="modeOfDelivery" disabled="@ReadOnly" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value="Spontaneous vaginal delivery (Normal)">Spontaneous vaginal delivery (Normal)</option>
+                        <option value="Episiotomy">Episiotomy</option>
+                        <option value="Vacuum">Vacuum</option>
+                        <option value="Forceps">Forceps</option>
+                        <option value="C-section">C-section</option>
+                        <option value="Other">Other (specify)</option>
+                    </select>
+                </div>
+
+                @if (modeOfDelivery == "Other")
+                {
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Specify custom delivery mode <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" required disabled="@ReadOnly" @bind="modeOfDeliverySpecify" placeholder="Clinical delivery process style" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                    </div>
+                }
+            </div>
+
+            <!-- C-section Conditional Indication Panel -->
+            @if (modeOfDelivery == "C-section")
+            {
+                <div class="mt-4 p-5 bg-amber-50/50 border border-amber-200 rounded-2xl space-y-3 animate-slide-in">
+                    <label class="block text-xs font-bold text-amber-950 uppercase tracking-wider">
+                        What was the clinical indication for C-section? <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                        @foreach (var ind in new[] {
+                            new { value = "Prolonged labour", label = "Prolonged Labor" },
+                            new { value = "Fetal distress", label = "Fetal Distress" },
+                            new { value = "Meconium-stained amniotic fluid", label = "Meconium Fluid Spill" },
+                            new { value = "Antepartum hemorrhage", label = "Antepartum Hemorrhage" },
+                            new { value = "Pre-eclempic toxemia", label = "Pre-eclamptic Toxemia" },
+                            new { value = "cephalopelvic disproportion", label = "Cephalopelvic Disproportion" },
+                            new { value = "Malpresentation", label = "Malpresentation (Breech)" },
+                            new { value = "Elective C-section", label = "Elective C-section" },
+                            new { value = "Pregnancy-induced hypertension", label = "Pregnancy-induced Hypertension" },
+                            new { value = "Other", label = "Other (specify)" },
+                            new { value = "Don't know", label = "Don't know" }
+                        })
+                        {
+                            <button type="button" disabled="@ReadOnly" @onclick="@(() => cSectionIndication = ind.value)" class="p-3 border text-left rounded-xl text-xs transition-all flex items-center justify-between cursor-pointer @(cSectionIndication == ind.value ? "border-amber-600 bg-amber-100/50 text-amber-900 font-bold font-semibold" : "border-slate-250 bg-white text-slate-600")">
+                                <span>@ind.label</span>
+                                @if (cSectionIndication == ind.value)
+                                {
+                                    <svg class="w-3.5 h-3.5 text-amber-700 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                }
+                            </button>
+                        }
+                    </div>
+
+                    @if (cSectionIndication == "Other")
+                    {
+                        <div class="pt-2">
+                            <label class="block text-xs font-bold text-amber-800 uppercase mb-1">
+                                Specify custom C-Section Indication <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" required disabled="@ReadOnly" @bind="cSectionIndicationOther" placeholder="Provide specific surgeon indications" class="block w-full px-3 py-2 bg-white border border-amber-300 focus:border-amber-500 text-slate-900 rounded-lg text-sm" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (!ReadOnly)
+        {
+            <div class="flex justify-end gap-3.5 border-t border-slate-100 pt-6">
+                <button type="button" @onclick="Cancel" class="px-5 py-3 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition-all cursor-pointer">
+                    Discard Changes
+                </button>
+                <button type="submit" disabled="@string.IsNullOrEmpty(screeningId)" class="px-6 py-3 bg-indigo-600 disabled:opacity-50 text-white font-extrabold rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    @(ExistingRecord != null ? "Update Delivery" : "Save Delivery Log")
+                </button>
+            </div>
+        }
+
+        @if (ReadOnly)
+        {
+            <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2 text-xs text-amber-800">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>You are previewing this Clinical Record in Read-Only view. To make amendments, make sure you are logged in as a <strong>Data Manager</strong>.</span>
+            </div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
+    [Parameter]
+    public deliveryforms? ExistingRecord { get; set; }
+
+    private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
+
+    private string _screeningId = "";
+    private string screeningId
+    {
+        get => _screeningId;
+        set
+        {
+            _screeningId = value;
+            UpdateSelectedScreeningData();
+        }
+    }
+
+    private DateTime dateOfInterview = DateTime.Now;
+
+    private double? _motherWeightKg;
+    private double? motherWeightKg
+    {
+        get => _motherWeightKg;
+        set { _motherWeightKg = value; RecalculateBMI(); }
+    }
+
+    private double? temperatureC;
+    private string tempMethod = "Oral";
+    private int? respiratoryRate;
+    private int? pulseRate;
+    private int? bloodPressureSys;
+    private int? bloodPressureDia;
+    private double? oxygenSaturation;
+    private string oxygenSource = "On room air";
+    private bool _bmiUnknown = false;
+    private bool bmiUnknown
+    {
+        get => _bmiUnknown;
+        set { _bmiUnknown = value; RecalculateBMI(); }
+    }
+    private string motherExamAbnormal = "No";
+    private string motherExamAbnormalSpecify = "";
+
+    private DateTime dateOfDelivery = DateTime.UtcNow;
+    private DateTime timeOfDelivery = DateTime.Now;
+    private string deliveryLocation = "Bondo";
+    private string deliveryLocationSpecify = "";
+    private string deliveredBy = "Nurse";
+    private string deliveredBySpecify = "";
+    private string modeOfDelivery = "Spontaneous vaginal delivery (Normal)";
+    private string modeOfDeliverySpecify = "";
+    private string cSectionIndication = "Prolonged labour";
+    private string cSectionIndicationOther = "";
+
+    private List<enrollmentforms> CandidateEnrolledList = new();
+    private string idSearchQuery = "";
+    private List<enrollmentforms> FilteredCandidateList => string.IsNullOrWhiteSpace(idSearchQuery)
+        ? CandidateEnrolledList
+        : CandidateEnrolledList.Where(c => c.screeningId != null && c.screeningId.Contains(idSearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private double? matchedHeight = null;
+    private double? BMI;
+
+    private ValidationResult? bpStatus => VitalsValidation.ValidateBloodPressure(bloodPressureSys, bloodPressureDia);
+    private ValidationResult? tempStatus => VitalsValidation.ValidateTemperature(temperatureC);
+    private ValidationResult? rrStatus => VitalsValidation.ValidateRespiratoryRate(respiratoryRate);
+    private ValidationResult? prStatus => VitalsValidation.ValidatePulseRate(pulseRate);
+    private ValidationResult? bmiStatus => VitalsValidation.ValidateBMI(BMI);
+
+    protected override void OnInitialized()
+    {
+        var activeDeliveredIds = Db.Delivery.Select(d => d.deliveryScreeningId).ToList();
+
+        CandidateEnrolledList = Db.Enrolment.Where(e =>
+        {
+            if (ExistingRecord != null && e.screeningId == ExistingRecord.deliveryScreeningId)
+            {
+                return true;
+            }
+            return !activeDeliveredIds.Contains(e.screeningId);
+        }).ToList();
+
+        if (ExistingRecord != null)
+        {
+            _screeningId = ExistingRecord.deliveryScreeningId ?? "";
+            dateOfInterview = ExistingRecord.interviewDate ?? DateTime.Now;
+            _motherWeightKg = ExistingRecord.physicalExam?.motherWeight;
+            temperatureC = ExistingRecord.physicalExam?.vitalSigns?.temperature?.tempValue;
+            tempMethod = ExistingRecord.physicalExam?.vitalSigns?.temperature?.location ?? "Oral";
+            respiratoryRate = ExistingRecord.physicalExam?.vitalSigns?.respiratoryRate;
+            pulseRate = ExistingRecord.physicalExam?.vitalSigns?.pulseRate;
+            bloodPressureSys = ExistingRecord.physicalExam?.vitalSigns?.bloodPressure?.systolic;
+            bloodPressureDia = ExistingRecord.physicalExam?.vitalSigns?.bloodPressure?.diastolic;
+            oxygenSaturation = ExistingRecord.physicalExam?.vitalSigns?.oxygenSaturation?.oxygenValue;
+            oxygenSource = ExistingRecord.physicalExam?.vitalSigns?.oxygenSaturation?.oxygenOptions ?? "On Room Air";
+            _bmiUnknown = ExistingRecord.bodyMassIndex?.unknown ?? false;
+            motherExamAbnormal = ExistingRecord.motherAbnormality?.motherAbnomValue ?? "No";
+            motherExamAbnormalSpecify = ExistingRecord.motherAbnormality?.specifics ?? "";
+            dateOfDelivery = ExistingRecord.deliveryHistory?.deliveryDate ?? DateTime.UtcNow;
+            
+            if (DateTime.TryParse(ExistingRecord.deliveryHistory?.deliveryTime, out var parsedTime))
+            {
+                timeOfDelivery = parsedTime;
+            }
+            else
+            {
+                timeOfDelivery = DateTime.Now;
+            }
+
+            deliveryLocation = ExistingRecord.deliveryHistory?.deliveryPlace?.deliveryChoices ?? "Bondo";
+            deliveryLocationSpecify = ExistingRecord.deliveryHistory?.deliveryPlace?.otherLocation ?? ExistingRecord.deliveryHistory?.deliveryPlace?.otherFacility ?? "";
+            deliveredBy = ExistingRecord.deliveryHistory?.deliveryPersonnel?.deliveryPersValue ?? "Nurse";
+            deliveredBySpecify = ExistingRecord.deliveryHistory?.deliveryPersonnel?.otherPersonnel ?? "";
+            modeOfDelivery = ExistingRecord.deliveryHistory?.deliveryMode?.choices ?? "Spontaneous vaginal delivery (Normal)";
+            modeOfDeliverySpecify = ExistingRecord.deliveryHistory?.deliveryMode?.otherMode ?? "";
+            cSectionIndication = ExistingRecord.deliveryHistory?.deliveryMode?.csectionIndication?.csectOptions ?? "Prolonged labour";
+            cSectionIndicationOther = ExistingRecord.deliveryHistory?.deliveryMode?.csectionIndication?.otherOption ?? "";
+        }
+        else
+        {
+            timeOfDelivery = DateTime.Now;
+        }
+        UpdateSelectedScreeningData();
+    }
+
+    private void UpdateSelectedScreeningData()
+    {
+        var match = Db.Enrolment.FirstOrDefault(e => e.screeningId == _screeningId);
+        if (match != null)
+        {
+            matchedHeight = match.height;
+        }
+        else
+        {
+            matchedHeight = null;
+        }
+        RecalculateBMI();
+    }
+
+    private void RecalculateBMI()
+    {
+        if (_bmiUnknown)
+        {
+            BMI = null;
+            return;
+        }
+        if (_motherWeightKg.HasValue && matchedHeight.HasValue && matchedHeight > 0)
+        {
+            double hM = matchedHeight.Value / 100.0;
+            BMI = Math.Round(_motherWeightKg.Value / (hM * hM), 1);
+        }
+        else
+        {
+            BMI = null;
+        }
+    }
+
+    private string GetBmiString()
+    {
+        if (_bmiUnknown) return "Unknown";
+        if (BMI.HasValue) return BMI.Value.ToString("F1");
+        return "---";
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (ReadOnly) return;
+
+        if (string.IsNullOrEmpty(screeningId))
+        {
+            return;
+        }
+
+        var record = new deliveryforms
+        {
+            deliveryScreeningId = screeningId,
+            interviewDate = dateOfInterview,
+            physicalExam = new PhysicalExamInfo
+            {
+                motherWeight = motherWeightKg ?? 0,
+                vitalSigns = new vitalSignsInfo
+                {
+                    temperature = new TempInfo2 { tempValue = temperatureC ?? 0, location = tempMethod },
+                    respiratoryRate = respiratoryRate ?? 0,
+                    pulseRate = pulseRate ?? 0,
+                    bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 },
+                    oxygenSaturation = new OxygenSaturation { oxygenValue = oxygenSaturation ?? 0, oxygenOptions = oxygenSource }
+                }
+            },
+            bodyMassIndex = new BMI
+            {
+                value = BMI ?? 0,
+                unknown = bmiUnknown
+            },
+            motherAbnormality = new MotherAbnomarlity
+            {
+                motherAbnomValue = motherExamAbnormal,
+                specifics = motherExamAbnormal == "Yes" ? motherExamAbnormalSpecify : ""
+            },
+            deliveryHistory = new DeliveryHistory
+            {
+                deliveryDate = dateOfDelivery,
+                deliveryTime = timeOfDelivery.ToString("HH:mm"),
+                deliveryPlace = new DeliveryPlace
+                {
+                    deliveryChoices = deliveryLocation,
+                    otherLocation = deliveryLocation == "Other Location" ? deliveryLocationSpecify : "",
+                    otherFacility = deliveryLocation == "Other hospital/clinic" ? deliveryLocationSpecify : ""
+                },
+                deliveryPersonnel = new DeliveryPersonnel
+                {
+                    deliveryPersValue = deliveredBy,
+                    otherPersonnel = deliveredBy == "Other" ? deliveredBySpecify : ""
+                },
+                deliveryMode = new DeliveryMode
+                {
+                    choices = modeOfDelivery,
+                    otherMode = modeOfDelivery == "Other" ? modeOfDeliverySpecify : "",
+                    csectionIndication = modeOfDelivery == "C-section" ? new CsectionIndication
+                    {
+                        csectOptions = cSectionIndication,
+                        otherOption = cSectionIndication == "Other" ? cSectionIndicationOther : ""
+                    } : null
+                }
+            }
+        };
+
+        if (ExistingRecord != null)
+        {
+            await ApiClient.UpdateDeliveryForm(record.deliveryScreeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+        }
+        else
+        {
+            await ApiClient.CreateDeliveryForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+        }
+
+        NavigationManager.NavigateTo("/records");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/records");
+    }
+}

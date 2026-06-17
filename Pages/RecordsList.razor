@@ -1,0 +1,516 @@
+@page "/records"
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+@inject ApiClient ApiClient
+@inject IJSRuntime JSRuntime
+@using BlazorFrontend.Models
+@using BlazorFrontend.lib
+@using BlazorFrontend.Components
+@using System.Reflection
+@using System.Text
+
+<div class="space-y-6">
+    <div class="bg-white border border-slate-150 p-5 rounded-2xl shadow-xs space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Audit Log &amp; Tables Browser
+                </h3>
+                <p class="text-xs text-slate-500 font-sans mt-0.5">
+                    Review persistent registries for clinical trials with initials checking and timestamp stamps
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button @onclick="DownloadCSV" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-105 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download CSV
+                </button>
+                <button @onclick="DownloadJSON" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-105 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download JSON
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="relative rounded-md shadow-xs">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" @bind="searchQuery" @bind:event="oninput" class="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500 text-slate-900 placeholder-slate-400 text-xs transition-all bg-white" placeholder="Search Screening ID or Initials..." />
+            </div>
+
+            <div>
+                <select @bind="facilityFilter" class="block w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-900 text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden">
+                    @foreach (var fac in facilities)
+                    {
+                        <option value="@fac">Facility: @fac</option>
+                    }
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-500 font-mono">
+                <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Logged Role: @(AppState.CurrentUser?.Role == "admin" ? "Administrator (Full CRUD)" : AppState.CurrentUser?.Role == "manager" ? "Data Manager (View & Enter)" : "Field Tech (Read-Only View)")</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="border-b border-slate-150 overflow-hidden">
+        <nav class="flex flex-wrap gap-1 -mb-px" aria-label="Tabs">
+            @foreach (var tab in tabs)
+            {
+                <button type="button" @onclick="() => SetActiveTable(tab.Id)" class="py-2 px-3 font-bold text-[10px] sm:text-xs rounded-t-xl border-b-2 transition-all cursor-pointer flex items-center gap-1.5 select-none @(activeTable == tab.Id ? "border-indigo-600 text-indigo-700 bg-indigo-50/50" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300")">
+                    @tab.Label
+                    <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600">@tab.Count</span>
+                </button>
+            }
+        </nav>
+    </div>
+
+    <div class="bg-white border border-slate-150 rounded-2xl shadow-xs overflow-hidden">
+        @if (FilteredAndSortedRecords().Count == 0)
+        {
+            <div class="p-8 text-center text-slate-400">
+                <svg class="w-6 h-6 text-slate-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <p class="text-xs font-semibold">No records found</p>
+            </div>
+        }
+        else
+        {
+            <div class="overflow-x-auto scrollbar-thin">
+                <table class="min-w-full divide-y divide-slate-200 table-fixed sm:table-auto">
+                    <thead class="bg-slate-50/50">
+                        @if (activeTable == "screening")
+                        {
+                            <tr>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("ScreeningId"))">
+                                    <div class="flex items-center gap-1">ID <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("HealthFacility"))">
+                                    <div class="flex items-center gap-1">Facility <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("InterviewDate"))">
+                                    <div class="flex items-center gap-1">Date <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Age</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BMI</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Elig</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        }
+                        else if (activeTable == "enrolment")
+                        {
+                            <tr>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("ScreeningId"))">
+                                    <div class="flex items-center gap-1">ID <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Facility</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Village</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BMI</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Education</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        }
+                        else if (activeTable == "anc")
+                        {
+                            <tr>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Visit/ID</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">GA</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wt</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BP</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Next</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        }
+                        else if (activeTable == "delivery")
+                        {
+                            <tr>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Del Date</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Loc</th>
+                                <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BMI</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mode</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        }
+                        else if (activeTable == "closeout")
+                        {
+                            <tr>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Term Date</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        }
+                        else if (activeTable == "audit")
+                        {
+                            <tr>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Timestamp</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">User</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Module</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Record ID</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                            </tr>
+                        }
+                    </thead>
+                    <tbody class="bg-white divide-y divide-slate-100">
+                        @foreach (var record in FilteredAndSortedRecords())
+                        {
+                            <tr class="hover:bg-slate-50/50 transition-all text-slate-800">
+                                @if (activeTable == "audit" && record is auditlogs aud)
+                                {
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@aud.timestamp.ToString("g")</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@aud.userInitials</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px]">
+                                        <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(aud.action == "Create" ? "bg-emerald-50 text-emerald-700" : aud.action == "Update" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
+                                            @aud.action
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px]">@aud.module</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono">@aud.recordId</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500">@aud.reason</td>
+                                }
+                                else
+                                {
+                                    var sId = GetRecordId(record);
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold font-mono text-indigo-900 border-l-2 border-l-indigo-600/30 truncate max-w-[110px]">@sId</td>
+
+                                    @if (activeTable == "screening" && record is screeningforms scr)
+                                    {
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@scr.healthFacility</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(scr.interviewDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(scr.Age?.years)y</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@scr.BMI</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-xs text-center">
+                                            <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(scr.eligibility?.meetsAllCriteria == "Yes" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-rose-700")">
+                                                @(scr.eligibility?.meetsAllCriteria == "Yes" ? "OK" : "Fail")
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                    }
+                                    else if (activeTable == "enrolment" && record is enrollmentforms enr)
+                                    {
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@enr.healthFacility</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold text-slate-600 truncate max-w-[80px]">@enr.villageOfResidence</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@GetEnrolmentBMI(enr)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[80px]">@enr.educationLevel</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                    }
+                                    else if (activeTable == "anc" && record is ancvisits anc)
+                                    {
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(anc.visitDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(anc.gestationAge?.gestWeeks)w</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@anc.weightKilos</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-semibold text-rose-700">@(anc.bloodPressure?.systolic)/@(anc.bloodPressure?.diastolic)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatToDdmMmyyyy(anc.nextAppointment)</td>
+                                    }
+                                    else if (activeTable == "delivery" && record is deliveryforms del)
+                                    {
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(del.deliveryHistory?.deliveryDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@del.deliveryHistory?.deliveryPlace?.deliveryChoices</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@(del.bodyMassIndex?.value?.ToString("F1") ?? "-")</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                    }
+                                    else if (activeTable == "closeout" && record is closeoutforms clo)
+                                    {
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(clo.dateOfTermination)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold text-slate-600 truncate max-w-[120px]">@clo.participantStatus?.choicesStudy</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-rose-700 font-bold truncate max-w-[100px]">@(clo.participantStatus?.incompleteReason?.incompletionOptions ?? "Graduated")</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                    }
+
+                                    <td class="px-4 py-3 whitespace-nowrap text-right text-[10px] font-medium space-x-1">
+                                        <button @onclick="@(() => ViewRecord(record))" class="p-1 text-slate-500 hover:text-indigo-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                        </button>
+                                        @if (AppState.CurrentUser?.Role == "admin")
+                                        {
+                                            <button @onclick="@(() => EditRecord(record))" class="p-1 text-slate-500 hover:text-indigo-600">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            </button>
+                                            <button @onclick="@(() => DeleteRecord(sId))" class="p-1 text-slate-400 hover:text-red-500">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @if (viewTable != null && viewRecord != null)
+    {
+        <RecordDetailModal Table="@viewTable" Record="@viewRecord" OnClose="CloseModal" />
+    }
+</div>
+
+@code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
+    private string activeTable = "screening";
+    private string searchQuery = "";
+    private string facilityFilter = "All";
+    private string sortField = "InterviewDate";
+    private string sortDirection = "desc";
+
+    private string[] facilities = new[] { "All", "Bondo", "Siaya", "Kuoyo", "Lumumba" };
+
+    private string? viewTable;
+    private object? viewRecord;
+
+    private class TabInfo
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    private IEnumerable<TabInfo> tabs => new[]
+    {
+        new TabInfo { Id = "screening", Label = "1. Screening", Count = Db.Screening.Count },
+        new TabInfo { Id = "enrolment", Label = "2. Enrolment", Count = Db.Enrolment.Count },
+        new TabInfo { Id = "anc", Label = "3. ANC", Count = Db.Anc.Count },
+        new TabInfo { Id = "delivery", Label = "4. Delivery", Count = Db.Delivery.Count },
+        new TabInfo { Id = "closeout", Label = "5. Closeout", Count = Db.Closeout.Count },
+        new TabInfo { Id = "audit", Label = "Audit Logs", Count = Db.AuditLogs.Count }
+    };
+
+    private void SetActiveTable(string table)
+    {
+        activeTable = table;
+        searchQuery = "";
+        sortField = table == "anc" ? "VisitDate" : table == "closeout" ? "CloseOutInterviewDate" : table == "audit" ? "Timestamp" : "SubmittedAt";
+    }
+
+    private void RequestSort(string field)
+    {
+        if (sortField == field && sortDirection == "asc")
+        {
+            sortDirection = "desc";
+        }
+        else
+        {
+            sortField = field;
+            sortDirection = "asc";
+        }
+    }
+
+    private string GetRecordId(object record)
+    {
+        if (record is screeningforms scr) return scr.screeningId;
+        if (record is enrollmentforms enr) return enr.screeningId;
+        if (record is deliveryforms del) return del.deliveryScreeningId;
+        if (record is closeoutforms clo) return clo.sreeningId;
+        if (record is ancvisits anc) return anc.visitNumber;
+        if (record is auditlogs aud) return aud.recordId;
+        return "";
+    }
+
+    private string GetRecordFacility(object record)
+    {
+        if (record is screeningforms scr) return scr.healthFacility;
+        if (record is enrollmentforms enr) return enr.healthFacility;
+        
+        var sId = GetRecordId(record);
+        if (record is ancvisits anc)
+        {
+            var parts = sId.Split('-');
+            if (parts.Length >= 3) sId = $"{parts[1]}-{parts[2]}";
+        }
+
+        var match = Db.Screening.FirstOrDefault(s => s.screeningId == sId);
+        return match?.healthFacility ?? "";
+    }
+
+    private string GetRecordSubmitter(object record)
+    {
+        if (record is closeoutforms clo) return clo.submittedBy ?? "";
+        if (record is auditlogs aud) return aud.userInitials;
+        return "";
+    }
+
+    private string GetEnrolmentBMI(enrollmentforms enr)
+    {
+        if (enr.height.HasValue && enr.height > 0 && enr.weight.HasValue && enr.weight > 0)
+        {
+            double hm = enr.height.Value / 100.0;
+            return Math.Round(enr.weight.Value / (hm * hm), 1).ToString("F1");
+        }
+        return "N/A";
+    }
+
+    private List<object> FilteredAndSortedRecords()
+    {
+        IEnumerable<object> dataset = activeTable switch
+        {
+            "screening" => Db.Screening,
+            "enrolment" => Db.Enrolment,
+            "delivery" => Db.Delivery,
+            "closeout" => Db.Closeout,
+            "anc" => Db.Anc,
+            "audit" => Db.AuditLogs,
+            _ => Enumerable.Empty<object>()
+        };
+
+        var query = dataset.Where(record =>
+        {
+            var sId = GetRecordId(record) ?? "";
+            var submitter = GetRecordSubmitter(record) ?? "";
+            var village = record is enrollmentforms enr ? enr.villageOfResidence : "";
+
+            bool matchesQuery = string.IsNullOrEmpty(searchQuery) ||
+                                sId.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                                submitter.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                                village.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+
+            if (activeTable == "audit") return matchesQuery;
+
+            var fac = GetRecordFacility(record);
+            bool matchesFacility = facilityFilter == "All" || fac == facilityFilter;
+
+            return matchesQuery && matchesFacility;
+        });
+
+        if (sortDirection == "asc")
+        {
+            return query.OrderBy(r => GetSortValue(r, sortField)).ToList();
+        }
+        else
+        {
+            return query.OrderByDescending(r => GetSortValue(r, sortField)).ToList();
+        }
+    }
+
+    private object GetSortValue(object record, string field)
+    {
+        if (field == "ScreeningId") return GetRecordId(record);
+        if (field == "HealthFacility") return GetRecordFacility(record);
+        if (field == "InterviewDate" && record is screeningforms scr) return scr.interviewDate;
+        if (field == "InterviewDate" && record is deliveryforms del) return del.interviewDate;
+        if (field == "CloseOutInterviewDate" && record is closeoutforms clo) return clo.closeOutInterviewDate;
+        if (field == "VisitDate" && record is ancvisits anc) return anc.visitDate;
+        if (field == "Timestamp" && record is auditlogs aud) return aud.timestamp;
+        
+        if (record is enrollmentforms enr) return enr.submittedAt;
+
+        return "";
+    }
+
+    private void ViewRecord(object record)
+    {
+        viewTable = activeTable;
+        viewRecord = record;
+    }
+
+    private void EditRecord(object record)
+    {
+        NavigationManager.NavigateTo($"/{activeTable}");
+    }
+
+    private async Task DeleteRecord(string id)
+    {
+        if (activeTable == "screening") await ApiClient.DeleteScreeningForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
+        else if (activeTable == "enrolment") await ApiClient.DeleteEnrollmentForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
+        else if (activeTable == "delivery") await ApiClient.DeleteDeliveryForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
+        else if (activeTable == "closeout") await ApiClient.DeleteCloseoutForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
+        else if (activeTable == "anc") await ApiClient.DeleteAncVisit(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+    private void CloseModal()
+    {
+        viewTable = null;
+        viewRecord = null;
+    }
+
+    private async Task DownloadCSV()
+    {
+        var records = FilteredAndSortedRecords();
+        if (!records.Any()) return;
+
+        var csv = GenerateCSV(records);
+        var fileName = $"{activeTable}_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "text/csv", Encoding.UTF8.GetBytes(csv));
+    }
+
+    private async Task DownloadJSON()
+    {
+        var records = FilteredAndSortedRecords();
+        if (!records.Any()) return;
+
+        var json = System.Text.Json.JsonSerializer.Serialize(records, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        var fileName = $"{activeTable}_export_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "application/json", Encoding.UTF8.GetBytes(json));
+    }
+
+    private string GenerateCSV(List<object> records)
+    {
+        if (!records.Any()) return "";
+
+        var sb = new StringBuilder();
+        var type = records.First().GetType();
+        var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(p => !p.Name.StartsWith("_") && p.Name != "Id" && p.Name != "MyProperty")
+                        .ToList();
+
+        // Header
+        sb.AppendLine(string.Join(",", props.Select(p => ToReadable(p.Name))));
+
+        // Rows
+        foreach (var record in records)
+        {
+            var values = props.Select(p => {
+                var val = p.GetValue(record);
+                if (val == null) return "";
+                var s = val.ToString() ?? "";
+                if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                    s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                return s;
+            });
+            sb.AppendLine(string.Join(",", values));
+        }
+
+        return sb.ToString();
+    }
+
+    private string ToReadable(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        var sb = new StringBuilder();
+        sb.Append(char.ToUpper(input[0]));
+        for (int i = 1; i < input.Length; i++)
+        {
+            if (char.IsUpper(input[i])) sb.Append(' ');
+            sb.Append(input[i]);
+        }
+        return sb.ToString();
+    }
+}

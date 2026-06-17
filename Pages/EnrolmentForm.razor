@@ -1,0 +1,485 @@
+@page "/enrolment"
+@inject ApiClient ApiClient
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@using BlazorFrontend.lib
+
+<div class="bg-white border border-slate-150 rounded-2xl shadow-xs p-6 md:p-8 space-y-8 max-w-5xl mx-auto shadow-violet-100/30">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-violet-100 pb-5 gap-4">
+        <div>
+            <span class="text-[10px] font-bold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full border border-violet-200 uppercase tracking-widest">
+                Form 2: Demographics &amp; Enrolment
+            </span>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
+                @(ExistingRecord != null ? "Edit Enrolment Record" : "Enroll Eligible Participant")
+            </h2>
+            <p class="text-xs text-slate-500 font-sans mt-0.5">
+                Collect socio-demographic indicators and vital physical parameters at clinical enrolment
+            </p>
+        </div>
+        <button type="button" @onclick="Cancel" class="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-all cursor-pointer">
+            Back to List
+        </button>
+    </div>
+
+    <EditForm Model="this" OnSubmit="HandleSubmit" class="space-y-8">
+        <div class="bg-violet-50/50 p-5 rounded-xl border border-violet-100/60 transition-all">
+            <div class="max-w-md">
+                <label class="block text-xs font-bold text-violet-950 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Eligible Screening ID Lookup <span class="text-red-500">*</span>
+                </label>
+
+                @if (ExistingRecord != null)
+                {
+                    <div class="bg-white border border-violet-200 px-4 py-2.5 rounded-lg font-mono font-bold text-slate-900 flex items-center justify-between shadow-xs">
+                        <span>@screeningId</span>
+                        <span class="text-[10px] uppercase tracking-wider text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            Locked
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-2">
+                        <div class="relative">
+                            <input type="text" @bind="idSearchQuery" @bind:event="oninput" placeholder="Type to search ID..." class="block w-full px-3 py-2 bg-white border border-slate-200 focus:border-indigo-500 text-slate-900 font-mono text-sm rounded-lg shadow-xs" />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <select required disabled="@ReadOnly" @bind="screeningId" @bind:event="oninput" class="block w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-indigo-500 text-slate-900 font-mono text-sm font-bold rounded-lg shadow-xs">
+                            <option value="">-- Select Eligible Screening ID (@FilteredEligibleList.Count found) --</option>
+                            @foreach (var cand in FilteredEligibleList)
+                            {
+                                <option value="@cand.screeningId">
+                                    @cand.screeningId - @cand.healthFacility (DOB: @(cand.DoB?.ToString("dd-MMM-yyyy") ?? "N/A"))
+                                </option>
+                            }
+                        </select>
+                        @if (EligibleList.Count == 0)
+                        {
+                            <p class="mt-1.5 text-[11px] text-amber-600 font-medium">
+                                &bull; No eligible, un-enrolled screening records currently match. Return to screening to enter eligible patients.
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(screeningId))
+        {
+            <div class="p-4 bg-slate-50 border border-slate-150 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-slate-600 font-sans animate-in fade-in slide-in-from-top-1">
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase">Assigned facility</span>
+                    <strong class="text-slate-900 text-sm font-semibold">@facility</strong>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase">Date of Birth</span>
+                    <strong class="text-slate-900 text-sm font-semibold">@dateOfBirth</strong>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase">Verified Age</span>
+                    <strong class="text-slate-900 text-sm font-semibold">@ageYears Years, @ageMonths Months</strong>    
+                </div>
+                <div class="col-span-1 border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-4 flex items-center gap-1">
+                    <svg class="w-4 h-4 text-violet-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    <span class="text-[10px] text-violet-700 font-medium leading-tight">These values match the verified criteria under code <strong>@screeningId</strong>.</span>
+                </div>
+            </div>
+        }
+
+        <!-- Demographics Area -->
+        <div class="space-y-4">
+            <h3 class="text-md font-bold text-slate-900 border-b border-slate-100 pb-2">
+                Demographic History Profile
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Marital Status <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-4 gap-2">
+                        @foreach (var status in new[] { "Single", "Married", "Widowed", "Divorced" })
+                        {
+                            <button type="button" disabled="@ReadOnly" @onclick="@(() => { maritalStatus = status; })" class="py-2 px-2 border text-xs font-semibold rounded-lg transition-all cursor-pointer @(maritalStatus == status ? "border-violet-600 bg-violet-50 text-violet-700 font-bold" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50")">
+                                @status
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Husband's Name @if (maritalStatus == "Married") { <span class="text-red-500">*</span> }
+                    </label>
+                    <input type="text" required="@(maritalStatus == "Married")" disabled="@(maritalStatus != "Married" || ReadOnly)" @bind="husbandName" placeholder="@(maritalStatus == "Married" ? "Enter full name of husband" : "N/A")" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm disabled:bg-slate-50 disabled:text-slate-400" />
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Village of Residence <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" required disabled="@ReadOnly" @bind="villageOfResidence" placeholder="Village name" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Education Level <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="educationLevel" disabled="@ReadOnly" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value="Never Attended School">Never Attended School</option>
+                        <option value="Primary">Primary</option>
+                        <option value="Secondary">Secondary</option>
+                        <option value="University/Collage">University/Collage</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Occupation <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="occupation" disabled="@ReadOnly" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value="Farmer">Farmer</option>
+                        <option value="Business woman">Business woman</option>
+                        <option value="Fisherman/Fish monger">Fisherman/Fish monger</option>
+                        <option value="Home maker">Home maker</option>
+                        <option value="Salaried worker">Salaried worker</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                @if (occupation == "Other")
+                {
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Specify Occupation <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" required maxlength="100" disabled="@ReadOnly" @bind="occupationOther" placeholder="Insert custom occupation" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Vital Signs area -->
+        <div class="space-y-4">
+            <h3 class="text-md font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                <svg class="w-5 h-5 text-violet-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                Vitals Profile (Enrolment Validation Check)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Height (cm) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" required min="100" max="250" disabled="@ReadOnly" @bind="heightCm" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Weight (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" step="0.1" min="10" max="300" required disabled="@ReadOnly" @bind="weightKg" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        BMI (Kg/m²) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200/55">
+                            <span class="text-sm font-bold text-slate-800">@(BMI.HasValue ? BMI.Value.ToString("F1") : "--.-")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                        Temperature (&deg;C) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex">
+                        <input type="number" step="0.1" min="36" max="42" required disabled="@ReadOnly" @bind="temperatureC" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-l-lg text-slate-900 text-sm" />
+                        <select @bind="tempMethod" disabled="@ReadOnly" class="px-2 py-2 bg-slate-50 border border-slate-200 border-l-0 rounded-r-lg text-xs text-slate-600">
+                            <option value="Oral">Oral</option>
+                            <option value="Axillary">Axillary</option>
+                            <option value="Tympanic">Tympanic</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Respiratory Rate / Pulse Rate</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="respiratoryRate" @bind:event="oninput" class="block w-full pl-2.5 pr-7 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-small" />
+                            <span class="absolute right-2 top-2.5 text-[9px] font-black text-slate-400">RR</span>
+                        </div>
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="pulseRate" @bind:event="oninput" class="block w-full pl-2.5 pr-7 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium" />
+                            <span class="absolute right-2 top-2.5 text-[9px] font-black text-slate-400">PR</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 tracking-wider">Blood Pressure</label>
+                    <div class="flex items-center gap-1">
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="bloodPressureSys" @bind:event="oninput" class="block w-full pl-2 pr-2 py-2 bg-white border rounded border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Systolic" />
+                            <span class="absolute right-2 top-3 text-[8px] font-black text-slate-300 uppercase">Sys</span>
+                        </div>
+                        <span class="text-slate-600 font-bold text-[21px]">&#47;</span>
+                        <div class="relative flex-1">
+                            <input type="number" required disabled="@ReadOnly" @bind="bloodPressureDia" @bind:event="oninput" class="block w-full pl-2.5 pr-2 py-2 bg-white border rounded border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Diastolic" />
+                            <span class="absolute right-2 top-3 text-[8px] font-black text-slate-300 uppercase">Dia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <VitalAlerts Results="@(new List<ValidationResult?> { bpStatus, tempStatus, rrStatus, prStatus, heightStatus, bmiStatus })" />
+        </div>
+
+        @if (!ReadOnly)
+        {
+            <div class="flex justify-end gap-3.5 border-t border-slate-100 pt-6">
+                <button type="button" @onclick="Cancel" class="px-5 py-3 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition-all cursor-pointer">
+                    Cancel Entry
+                </button>
+                <button type="submit" disabled="@string.IsNullOrEmpty(screeningId)" class="px-6 py-3 bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold rounded-xl text-xs shadow-lg shadow-indigo-100/50 hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    @(ExistingRecord != null ? "Update Enrolment" : "Enroll Participant")
+                </button>
+            </div>
+        }
+
+        @if (ReadOnly)
+        {
+            <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2 text-xs text-amber-800">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>You are previewing this Clinical Record in Read-Only view.</span>
+            </div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
+    [Parameter]
+    public enrollmentforms? ExistingRecord { get; set; }
+
+    private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
+
+    private string _screeningId = "";
+    private string screeningId
+    {
+        get => _screeningId;
+        set
+        {
+            _screeningId = value;
+            UpdateSelectedScreeningData();
+        }
+    }
+
+    private string facility = "Bondo";
+    private DateTime dateOfBirth = DateTime.MinValue;
+    private int ageYears = 0;
+    private int ageMonths = 0;
+
+    private string maritalStatus = "Single";
+    private string husbandName = "";
+    private string villageOfResidence = "";
+    private string educationLevel = "Primary";
+    private string occupation = "Farmer";
+    private string occupationOther = "";
+
+    private double? _heightCm;
+    private double? heightCm
+    {
+        get => _heightCm;
+        set { _heightCm = value; RecalculateBMI(); }
+    }
+
+    private double? _weightKg;
+    private double? weightKg
+    {
+        get => _weightKg;
+        set { _weightKg = value; RecalculateBMI(); }
+    }
+
+    private double? BMI;
+    private double? temperatureC;
+    private string tempMethod = "Oral";
+    private int? respiratoryRate;
+    private int? pulseRate;
+    private int? bloodPressureSys;
+    private int? bloodPressureDia;
+
+    private ValidationResult? bpStatus => VitalsValidation.ValidateBloodPressure(bloodPressureSys, bloodPressureDia);
+    private ValidationResult? tempStatus => VitalsValidation.ValidateTemperature(temperatureC);
+    private ValidationResult? rrStatus => VitalsValidation.ValidateRespiratoryRate(respiratoryRate);
+    private ValidationResult? prStatus => VitalsValidation.ValidatePulseRate(pulseRate);
+    private ValidationResult? heightStatus => VitalsValidation.ValidateHeight(heightCm);
+    private ValidationResult? bmiStatus => VitalsValidation.ValidateBMI(BMI);
+
+    private List<screeningforms> EligibleList = new();
+    private string idSearchQuery = "";
+    private List<screeningforms> FilteredEligibleList => string.IsNullOrWhiteSpace(idSearchQuery) 
+        ? EligibleList 
+        : EligibleList.Where(s => s.screeningId != null && s.screeningId.Contains(idSearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override void OnInitialized()
+    {
+        var activeEnrolledIds = Db.Enrolment.Select(e => e.screeningId).ToList();
+
+        EligibleList = Db.Screening.Where(s =>
+        {
+            bool matchCriteria = s.eligibility.meetsAllCriteria == "Yes" && s.eligibility.consentedToParticipate == "Yes";
+            if (!matchCriteria) return false;
+            if (ExistingRecord != null && s.screeningId == ExistingRecord.screeningId) return true;
+            return !activeEnrolledIds.Contains(s.screeningId);
+        }).ToList();
+
+        if (ExistingRecord != null)
+        {
+            _screeningId = ExistingRecord.screeningId ?? "";
+            facility = ExistingRecord.healthFacility ?? "Bondo";
+            dateOfBirth = ExistingRecord.DoB ?? DateTime.MinValue;
+            ageYears = ExistingRecord.Age?.years ?? 0;
+            ageMonths = ExistingRecord.Age?.months ?? 0;
+            maritalStatus = ExistingRecord.maritalStatus ?? "Single";
+            husbandName = ExistingRecord.HusbandName ?? "";
+            villageOfResidence = ExistingRecord.villageOfResidence ?? "";
+            educationLevel = ExistingRecord.educationLevel ?? "Primary";
+            occupation = ExistingRecord.subjectOccupation ?? "Farmer";
+            occupationOther = ExistingRecord.otherOccupation ?? "";
+            _heightCm = ExistingRecord.height;
+            _weightKg = ExistingRecord.weight;
+            temperatureC = ExistingRecord.vitalSigns?.temperature?.value;
+            tempMethod = ExistingRecord.vitalSigns?.temperature?.location ?? "Oral";
+            respiratoryRate = ExistingRecord.vitalSigns?.respiratoryRate;
+            pulseRate = ExistingRecord.vitalSigns?.pulseRate;
+            bloodPressureSys = ExistingRecord.vitalSigns?.bloodPressure?.systolic;
+            bloodPressureDia = ExistingRecord.vitalSigns?.bloodPressure?.diastolic;
+        }
+    }
+
+    private void UpdateSelectedScreeningData()
+    {
+        var origin = Db.Screening.FirstOrDefault(s => s.screeningId == _screeningId);
+        if (origin != null && ExistingRecord == null)
+        {
+            facility = origin.healthFacility ?? "Bondo";
+            dateOfBirth = origin.DoB ?? DateTime.MinValue;
+            ageYears = origin.Age?.years ?? 0;
+            ageMonths = origin.Age?.months ?? 0;
+            _heightCm = origin.height;
+            _weightKg = origin.weight;
+            BMI = origin.BMI;
+            temperatureC = origin.vitalSigns?.temperature?.value;
+            tempMethod = origin.vitalSigns?.temperature?.location ?? "Oral";
+            respiratoryRate = origin.vitalSigns?.respiratoryRate;
+            pulseRate = origin.vitalSigns?.pulseRate;
+            bloodPressureSys = origin.vitalSigns?.bloodPressure?.systolic;
+            bloodPressureDia = origin.vitalSigns?.bloodPressure?.diastolic;
+        }
+    }
+
+    private void RecalculateBMI()
+    {
+        if (_heightCm.HasValue && _heightCm > 0 && _weightKg.HasValue && _weightKg > 0)
+        {
+            double hM = _heightCm.Value / 100.0;
+            BMI = Math.Round(_weightKg.Value / (hM * hM), 1);
+        }
+        else
+        {
+            BMI = null;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (ReadOnly) return;
+
+        if (string.IsNullOrEmpty(screeningId))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(villageOfResidence))
+        {
+            return;
+        }
+
+        if (heightStatus?.BlockEntry == true)
+        {
+            return;
+        }
+
+        var record = new enrollmentforms
+        {
+            screeningId = screeningId,
+            healthFacility = facility,
+            DoB = dateOfBirth,
+            Age = new AgeInfo { years = ageYears, months = ageMonths },
+            maritalStatus = maritalStatus,
+            HusbandName = maritalStatus == "Married" ? husbandName : "",
+            villageOfResidence = villageOfResidence,
+            educationLevel = educationLevel,
+            subjectOccupation = occupation,
+            otherOccupation = occupation == "Other" ? occupationOther : "",
+            height = heightCm ?? 0,
+            weight = weightKg ?? 0,
+            bodyMassIndex = new BlazorFrontend.Models.BMI{
+                value = 0,
+                unknown = false
+            },
+            vitalSigns = new VitalSignsInfo
+            {
+                temperature = new TempInfo { value = temperatureC ?? 0, location = tempMethod },
+                respiratoryRate = respiratoryRate ?? 0,
+                pulseRate = pulseRate ?? 0,
+                bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 }
+            },
+            estGestAge = 0, // Should be calculated or carried over
+            gaParameters = null, // To be populated properly
+            submittedAt = ExistingRecord?.submittedAt ?? DateTime.Now,
+            createdAt = ExistingRecord?.createdAt ?? DateTime.Now,
+            updatedAt = DateTime.Now
+        };
+
+        if (ExistingRecord != null)
+        {
+            await ApiClient.UpdateEnrollmentForm(record.screeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+        }
+        else
+        {
+            await ApiClient.CreateEnrollmentForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+        }
+
+        NavigationManager.NavigateTo("/records");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/records");
+    }
+}

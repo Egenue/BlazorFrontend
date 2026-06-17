@@ -1,0 +1,186 @@
+@using BlazorFrontend.lib
+
+<div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-2xl w-full border border-slate-105 shadow-2xl overflow-hidden animate-in zoom-in-95">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-600 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <div>
+                    <h3 class="text-md font-extrabold text-slate-900">Clinical Case Report (CRF) Sheet</h3>
+                    <p class="text-[10px] text-slate-500 font-mono">Table: @Table.ToUpper() &bull; Code: @GetRecordId()</p>
+                </div>
+            </div>
+            <button @onclick="OnClose" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 border border-slate-150 flex items-center justify-center text-slate-500 transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto max-h-[75vh]">
+            @if (Table == "screening" && Record is screeningforms scr)
+            {
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Screening ID</span>
+                            <strong class="text-sm font-mono font-bold text-slate-800">@scr.screeningId</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Health Facility</span>
+                            <strong class="text-sm text-slate-800 font-semibold">@scr.healthFacility</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Interview Date</span>
+                            <strong class="text-sm text-slate-800">@DateUtils.FormatToDdmMmyyyy(scr.interviewDate)</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Date of Birth</span>
+                            <strong class="text-sm text-slate-800">@DateUtils.FormatToDdmMmyyyy(scr.DoB)</strong>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-indigo-950 uppercase tracking-widest flex items-center gap-1">
+                            <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            A. Initial Physical Assessment
+                        </h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 border border-slate-200 rounded-xl">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Height</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.height cm</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Weight</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.weight kg</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">BMI (Calculated)</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.BMI Kg/m²</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Temperature</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.vitalSigns?.temperature?.value &deg;C (@scr.vitalSigns?.temperature?.location)</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Respiration Rate</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.vitalSigns?.respiratoryRate bpm</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Pulse Rate</span>
+                                <span class="text-xs font-bold text-slate-800">@scr.vitalSigns?.pulseRate bpm</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Blood pressure</span>
+                                <span class="text-xs font-bold text-slate-800">@(scr.vitalSigns?.bloodPressure?.systolic) / @(scr.vitalSigns?.bloodPressure?.diastolic) mmHg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add other details similarly -->
+                </div>
+            }
+            else if (Table == "enrolment" && Record is enrollmentforms enr)
+            {
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Assigned Screening ID</span>
+                            <strong class="text-sm font-mono text-slate-800">@enr.screeningId</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Facility</span>
+                            <strong class="text-sm text-slate-800 font-semibold">@enr.healthFacility</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Birth DOB</span>
+                            <strong class="text-sm text-slate-800">@DateUtils.FormatToDdmMmyyyy(enr.DoB)</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Age</span>
+                            <strong class="text-sm text-slate-800">@enr.Age?.years yrs, @enr.Age?.months mths</strong>
+                        </div>
+                    </div>
+
+                    <!-- Add other enrolment details -->
+                </div>
+            }
+            else if (Table == "delivery" && Record is deliveryforms del)
+            {
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Assigned Screening ID</span>
+                            <strong class="text-sm font-mono text-slate-800">@del.deliveryScreeningId</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Date of Delivery</span>
+                            <strong class="text-sm text-slate-800">@DateUtils.FormatToDdmMmyyyy(del.deliveryHistory?.deliveryDate)</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Time of Delivery</span>
+                            <strong class="text-sm text-slate-800 font-mono">@del.deliveryHistory?.deliveryTime</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Table == "closeout" && Record is closeoutforms clo)
+            {
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Assigned Screening ID</span>
+                            <strong class="text-sm font-mono text-slate-800">@clo.sreeningId</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Study Termination date</span>
+                            <strong class="text-sm text-slate-800">@DateUtils.FormatToDdmMmyyyy(clo.dateOfTermination)</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="px-6 py-4.5 bg-slate-50 border-t border-slate-100 flex flex-wrap justify-between items-center text-[10px] text-slate-400 font-mono">
+            <span>Logged by Initials: <strong class="text-slate-700">@GetSubmittedBy()</strong></span>
+            <span>Interview Timestamp: <strong class="text-slate-700">@GetSubmittedAt()</strong></span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Table { get; set; } = string.Empty;
+
+    [Parameter]
+    public object? Record { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string GetRecordId()
+    {
+        if (Record is screeningforms scr) return scr.screeningId ?? "N/A";
+        if (Record is enrollmentforms enr) return enr.screeningId ?? "N/A";
+        if (Record is deliveryforms del) return del.deliveryScreeningId ?? "N/A";
+        if (Record is closeoutforms clo) return clo.sreeningId ?? "N/A";
+        if (Record is ancvisits anc) return anc.visitNumber ?? "N/A";
+        return "";
+    }
+
+    private string GetSubmittedBy()
+    {
+        if (Record is closeoutforms clo) return clo.submittedBy ?? "N/A";
+        return "N/A";
+    }
+
+    private string GetSubmittedAt()
+    {
+        if (Record is closeoutforms clo) return clo.submittedAt?.ToString("g") ?? "N/A";
+        return "N/A";
+    }
+}

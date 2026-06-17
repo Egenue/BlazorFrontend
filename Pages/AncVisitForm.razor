@@ -1,0 +1,306 @@
+@page "/anc"
+@inject ApiClient ApiClient
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@using BlazorFrontend.lib
+@using BlazorFrontend.Models
+
+<div class="bg-white border border-slate-150 rounded-2xl shadow-sm p-6 md:p-8 space-y-8 max-w-4xl mx-auto">
+    <div class="flex justify-between items-center border-b border-indigo-100 pb-5">
+        <div>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full border border-indigo-200 uppercase tracking-widest">
+                Form: ANC Visit
+            </span>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
+                @(ExistingRecord != null ? "Edit ANC Visit" : "New ANC Visit Record")
+            </h2>
+        </div>
+        <button type="button" @onclick="Cancel" class="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-all cursor-pointer">
+            Cancel
+        </button>
+    </div>
+
+    <EditForm Model="this" OnSubmit="HandleSubmit" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="col-span-1 md:col-span-2">
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Select Enrolled Participant ID <span class="text-red-500">*</span>
+                </label>
+                @if (ExistingRecord != null)
+                {
+                    <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-lg font-mono font-bold text-indigo-950 flex items-center justify-between">
+                        <span>@_screeningId</span>
+                        <span class="text-[9px] uppercase font-black bg-white/50 px-2 py-0.5 rounded border border-indigo-200">Locked</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-2">
+                        <div class="relative">
+                            <input type="text" @bind="idSearchQuery" @bind:event="oninput" placeholder="Search by ID..." class="block w-full px-3 py-2 bg-white border border-slate-200 focus:border-indigo-500 text-slate-900 font-mono text-sm rounded-lg" />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <select required disabled="@ReadOnly" @bind="screeningId" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm font-bold font-mono">
+                            <option value="">-- Select Enrolled Participant (@FilteredEnrolledList.Count found) --</option>
+                            @foreach (var p in FilteredEnrolledList)
+                            {
+                                <option value="@p.screeningId">@p.screeningId</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Visit Number (Auto)
+                </label>
+                <div class="px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-700 text-sm font-mono font-bold">
+                    @(string.IsNullOrEmpty(visitNumber) ? "---" : visitNumber)
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Visit Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" required disabled="@ReadOnly" @bind="visitDate" @bind:format="yyyy-MM-dd" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Weight (kg) <span class="text-red-500">*</span>
+                </label>
+                <input type="number" step="0.1" required disabled="@ReadOnly" @bind="weightKilos" @bind:event="oninput" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm" placeholder="kg" />
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+                <h3 class="text-xs font-bold text-slate-700 uppercase flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Gestation Age
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-1">Weeks</label>
+                        <input type="number" required disabled="@ReadOnly" @bind="gestWeeks" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-1">Days</label>
+                        <input type="number" required disabled="@ReadOnly" @bind="gestDays" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 space-y-4">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    Blood Pressure
+                </h3>
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input type="number" required disabled="@ReadOnly" @bind="systolic" @bind:event="oninput" class="block w-full pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-center font-mono" placeholder="Sys" />
+                        <span class="absolute right-2 top-2.5 text-[7px] font-black text-slate-300 uppercase">Sys</span>
+                    </div>
+                    <span class="text-slate-300 font-bold">/</span>
+                    <div class="relative flex-1">
+                        <input type="number" required disabled="@ReadOnly" @bind="diastolic" @bind:event="oninput" class="block w-full pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-center font-mono" placeholder="Dia" />
+                        <span class="absolute right-2 top-2.5 text-[7px] font-black text-slate-300 uppercase">Dia</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Fundal Height (cm) <span class="text-red-500">*</span>
+                </label>
+                <input type="number" required disabled="@ReadOnly" @bind="fundalHeight" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" />
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    MUAC (cm) <span class="text-red-500">*</span>
+                </label>
+                <input type="number" step="0.1" required disabled="@ReadOnly" @bind="muac" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" />
+            </div>
+        </div>
+
+        <BlazorFrontend.Components.VitalAlerts Results="@(new List<ValidationResult?> { bpStatus, bmiStatus })" />
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Complaints
+                </label>
+                <textarea disabled="@ReadOnly" @bind="complaints" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm h-20"></textarea>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                    Medication Given
+                </label>
+                <input type="text" disabled="@ReadOnly" @bind="medicationGiven" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+            <div>
+                <label class="block text-[11px] font-bold text-indigo-600 mb-1.5 uppercase tracking-wider">
+                    Next Appointment Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" required disabled="@ReadOnly" @bind="nextAppointment" @bind:format="yyyy-MM-dd" class="block w-full px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-bold text-indigo-900" />
+            </div>
+            <div class="flex items-end justify-end gap-3">
+                 <button type="button" @onclick="Cancel" class="px-5 py-2.5 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" disabled="@ReadOnly" class="px-6 py-2.5 bg-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    @(ExistingRecord != null ? "Update Visit" : "Save ANC Visit")
+                </button>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
+    [Parameter]
+    public ancvisits? ExistingRecord { get; set; }
+
+    private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
+
+    private string idSearchQuery = "";
+    private List<enrollmentforms> FilteredEnrolledList => string.IsNullOrWhiteSpace(idSearchQuery)
+        ? Db.Enrolment
+        : Db.Enrolment.Where(e => e.screeningId != null && e.screeningId.Contains(idSearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private string _screeningId = "";
+    private string screeningId
+    {
+        get => _screeningId;
+        set
+        {
+            _screeningId = value;
+            if (ExistingRecord == null && !string.IsNullOrEmpty(_screeningId))
+            {
+                var previousVisits = Db.Anc.Where(v => v.visitNumber != null && v.visitNumber.Contains(_screeningId)).ToList();
+                var nextVisitNum = previousVisits.Count + 1;
+                visitNumber = $"V{nextVisitNum}-{_screeningId}";
+            }
+        }
+    }
+    private string visitNumber = "";
+    private DateTime visitDate = DateTime.Today;
+    private int? gestWeeks;
+    private int? gestDays;
+    private int? _weightKilos;
+    private int? weightKilos
+    {
+        get => _weightKilos;
+        set { _weightKilos = value; RecalculateBMI(); }
+    }
+    private int? systolic;
+    private int? diastolic;
+    private int? fundalHeight;
+    private int? muac;
+    private string complaints = "None";
+    private string medicationGiven = "None";
+    private DateTime nextAppointment = DateTime.Today.AddDays(7);
+
+    private double? BMI;
+
+    private ValidationResult? bpStatus => VitalsValidation.ValidateBloodPressure(systolic, diastolic);
+    private ValidationResult? bmiStatus => VitalsValidation.ValidateBMI(BMI);
+
+    protected override void OnInitialized()
+    {
+        if (ExistingRecord != null)
+        {
+            visitNumber = ExistingRecord.visitNumber ?? "";
+            var idParts = visitNumber.Split('-');
+            if (idParts.Length >= 3)
+            {
+                _screeningId = $"{idParts[1]}-{idParts[2]}";
+            }
+            visitDate = ExistingRecord.visitDate ?? DateTime.Today;
+            gestWeeks = ExistingRecord.gestationAge?.gestWeeks;
+            gestDays = ExistingRecord.gestationAge?.gestDays;
+            _weightKilos = ExistingRecord.weightKilos;
+            systolic = ExistingRecord.bloodPressure?.systolic;
+            diastolic = ExistingRecord.bloodPressure?.diastolic;
+            fundalHeight = ExistingRecord.fundalHeight;
+            muac = ExistingRecord.muac;
+            complaints = ExistingRecord.complaints ?? "None";
+            medicationGiven = ExistingRecord.medicationGiven ?? "None";
+            nextAppointment = ExistingRecord.nextAppointment ?? DateTime.Today.AddDays(7);
+        }
+        RecalculateBMI();
+    }
+
+    private void RecalculateBMI()
+    {
+        var enrolledSubject = Db.Enrolment.FirstOrDefault(p => p.screeningId == _screeningId);
+        double heightCm = enrolledSubject?.height ?? 0;
+        
+        if (heightCm > 0 && _weightKilos.HasValue)
+        {
+            double hM = heightCm / 100.0;
+            BMI = Math.Round(_weightKilos.Value / (hM * hM), 1);
+        }
+        else
+        {
+            BMI = null;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (ReadOnly) return;
+
+        if (string.IsNullOrEmpty(screeningId))
+        {
+            return;
+        }
+
+        var record = new ancvisits
+        {
+            visitNumber = visitNumber,
+            visitDate = visitDate,
+            gestationAge = new GestationAgeInfo { gestWeeks = gestWeeks ?? 0, gestDays = gestDays ?? 0 },
+            weightKilos = weightKilos ?? 0,
+            bloodPressure = new BloodPressureInfo { systolic = systolic ?? 0, diastolic = diastolic ?? 0 },
+            fundalHeight = fundalHeight ?? 0,
+            muac = muac ?? 0,
+            complaints = complaints,
+            medicationGiven = medicationGiven,
+            nextAppointment = nextAppointment
+        };
+
+        if (ExistingRecord != null)
+        {
+            await ApiClient.DeleteAncVisit(record.visitNumber, AppState.CurrentUser?.Initials ?? "SYS", "Update Fallback");
+        }
+        
+        await ApiClient.CreateAncVisit(record, AppState.CurrentUser?.Initials ?? "SYS");
+
+        NavigationManager.NavigateTo("/records");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/records");
+    }
+}

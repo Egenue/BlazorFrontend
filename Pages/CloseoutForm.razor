@@ -1,0 +1,310 @@
+@page "/closeout"
+@inject ApiClient ApiClient
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+@using BlazorFrontend.lib
+@using BlazorFrontend.Models
+
+<div class="bg-white border border-slate-150 rounded-2xl p-6 md:p-8 space-y-8 max-w-4xl mx-auto shadow-amber-100/30">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-100 pb-5 gap-4">
+        <div>
+            <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 uppercase tracking-widest">
+                Form 4: Patient Closeout / Termination
+            </span>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
+                @(ExistingRecord != null ? "Edit Closeout Record" : "Digitize Graduation / Termination")
+            </h2>
+            <p class="text-xs text-slate-500 font-sans mt-0.5">
+                Formal registry graduation or protocol safety drop-out tracking for any Screening ID
+            </p>
+        </div>
+        <button type="button" @onclick="Cancel" class="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-all cursor-pointer">
+            Back to List
+        </button>
+    </div>
+
+    <EditForm Model="this" OnSubmit="HandleSubmit" class="space-y-8">
+        <div class="bg-amber-50/50 p-5 rounded-xl border border-amber-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="col-span-1 sm:col-span-2">
+                <label class="block text-xs font-bold text-amber-950 uppercase tracking-wider mb-2">
+                    Verify Subject Screening ID <span class="text-red-500">*</span>
+                </label>
+                @if (ExistingRecord != null)
+                {
+                    <div class="bg-white border border-amber-200 px-4 py-2.5 rounded-lg font-mono font-bold text-slate-900 shadow-xs">
+                        @screeningId
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-2">
+                        <div class="relative">
+                            <input type="text" @bind="idSearchQuery" @bind:event="oninput" placeholder="Type to search ID..." class="block w-full px-3 py-2 bg-white border border-slate-200 focus:border-amber-500 text-slate-900 font-mono text-sm rounded-lg shadow-xs" />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <select required disabled="@ReadOnly" @bind="screeningId" class="block w-full px-3 py-2.5 bg-white border border-slate-200 text-slate-900 font-mono text-sm font-bold rounded-lg shadow-xs">
+                            <option value="">-- Available Trial Screening IDs (@FilteredCandidateList.Count found) --</option>
+                            @foreach (var cand in FilteredCandidateList)
+                            {
+                                <option value="@cand.screeningId">
+                                    @cand.screeningId - @cand.healthFacility (@(cand.eligibility?.meetsAllCriteria == "Yes" ? "Eligible" : "Screen Fail"))
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Interview Date <span class="text-red-500">*</span>
+                </label>
+                <input type="date" required disabled="@ReadOnly" @bind="dateOfInterview" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-amber-500" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Date of Study Termination <span class="text-red-500">*</span>
+                </label>
+                <input type="date" required disabled="@ReadOnly" @bind="dateOfStudyTermination" @bind:format="yyyy-MM-dd" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-amber-500" />
+            </div>
+
+            <div class="flex items-center">
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-800 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0 select-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Make sure discontinuation dates match clinical record sheets before confirmation.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-3 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                4. What was the participant's status? <span class="text-red-500">*</span>
+            </label>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                @foreach (var status in new[] {
+                    new { id = "Completed study visits", label = "Completed Study Visits" },
+                    new { id = "Participation terminated prior to completion of study visits", label = "Terminated Prior to Completion" },
+                    new { id = "Screen failure before enrollment", label = "Screen Failure Before enrollment" }
+                })
+                {
+                    <button type="button" disabled="@ReadOnly" @onclick="@(() => SetParticipantStatus(status.id))" class="p-4 border text-center rounded-xl text-xs font-semibold flex items-center justify-center transition-all cursor-pointer @(participantStatus == status.id ? "border-indigo-600 bg-indigo-50 text-indigo-700 font-bold" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50")">
+                        @status.label
+                    </button>
+                }
+            </div>
+        </div>
+
+        @if (participantStatus != "Completed study visits")
+        {
+            <div class="p-5 border border-dashed border-slate-300 rounded-xl space-y-4 bg-slate-50/50 animate-slide-in">
+                <div class="flex items-center gap-2 text-rose-700">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <h4 class="text-sm font-bold">Discontinuation Reasons Registry</h4>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach (var reason in new[] {
+                        new { val = "Adverse event", lbl = "Adverse Event (AE)" },
+                        new { val = "Death", lbl = "Death occurred" },
+                        new { val = "Lost to follow-up", lbl = "Lost to Follow-up" },
+                        new { val = "Physician decision", lbl = "Physician Decision" },
+                        new { val = "Protocol deviation", lbl = "Protocol Deviation" },
+                        new { val = "Screen failure", lbl = "Screen Failure" },
+                        new { val = "Study terminated by sponsor", lbl = "Terminated by Sponsor" },
+                        new { val = "Withdrawal by participant", lbl = "Withdrawal by Participant" },
+                        new { val = "Other", lbl = "Other (specify)" }
+                    })
+                    {
+                        <button type="button" disabled="@(ReadOnly || participantStatus == "Screen failure before enrollment")" @onclick="@(() => { discontinuationReason = reason.val; })" class="p-3 border text-left rounded-xl text-xs transition-all flex items-center justify-between cursor-pointer @(discontinuationReason == reason.val ? "border-amber-600 bg-amber-50 text-amber-900 font-bold" : "border-slate-200 bg-white text-slate-500")">
+                            <span>@reason.lbl</span>
+                            @if (discontinuationReason == reason.val)
+                            {
+                                <svg class="w-3.5 h-3.5 text-amber-700 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            }
+                        </button>
+                    }
+                </div>
+
+                @if (discontinuationReason == "Death")
+                {
+                    <div class="p-4 bg-slate-900 text-white rounded-xl border border-slate-800 space-y-3 animate-slide-in">
+                        <div class="flex items-center gap-2 text-red-400">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span class="text-xs font-bold uppercase tracking-wider">Deceased Record Declaration</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">
+                                Date of Death <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" required disabled="@ReadOnly" max="@DateTime.Now.ToString("yyyy-MM-dd")" @bind="deathDate" @bind:format="yyyy-MM-dd" class="block px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg text-xs" />
+                        </div>
+                    </div>
+                }
+
+                @if (new[] { "Adverse event", "Protocol deviation", "Withdrawal by participant", "Other" }.Contains(discontinuationReason))
+                {
+                    <div class="pt-1 bg-white p-3 rounded-xl border border-slate-200 animate-slide-in">
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-2">
+                            Specify details regarding discontinued reason (@discontinuationReason) <span class="text-red-500">*</span>
+                        </label>
+                        <textarea required disabled="@ReadOnly" rows="2" @bind="discontinuationReasonDetail" placeholder="Insert exact notes or protocol code specification details" class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"></textarea>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (!ReadOnly)
+        {
+            <div class="flex justify-end gap-3.5 border-t border-slate-100 pt-6">
+                <button type="button" @onclick="Cancel" class="px-5 py-3 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" disabled="@string.IsNullOrEmpty(screeningId)" class="px-6 py-3 bg-indigo-600 disabled:opacity-50 text-white font-extrabold rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    @(ExistingRecord != null ? "Update Closeout" : "Submit Graduation Log")
+                </button>
+            </div>
+        }
+
+        @if (ReadOnly)
+        {
+            <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2 text-xs text-amber-800">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>You are previewing this Clinical Record in Read-Only view. To make amendments, make sure you are logged in as a <strong>Data Manager</strong>.</span>
+            </div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
+    [Parameter]
+    public closeoutforms? ExistingRecord { get; set; }
+
+    private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
+
+    private string idSearchQuery = "";
+    private List<screeningforms> FilteredCandidateList => string.IsNullOrWhiteSpace(idSearchQuery)
+        ? Db.Screening.Where(s => !Db.Closeout.Any(c => c.sreeningId == s.screeningId)).ToList()
+        : Db.Screening.Where(s => !Db.Closeout.Any(c => c.sreeningId == s.screeningId))
+                      .Where(s => s.screeningId != null && s.screeningId.Contains(idSearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private string screeningId = "";
+    private DateTime dateOfInterview = DateTime.Today;
+    private DateTime dateOfStudyTermination = DateTime.Today;
+    private string participantStatus = "Completed study visits";
+    private string discontinuationReason = "";
+    private string discontinuationReasonDetail = "";
+    private DateTime? deathDate = null;
+
+    protected override void OnInitialized()
+    {
+        if (ExistingRecord != null)
+        {
+            screeningId = ExistingRecord.sreeningId ?? "";
+            dateOfInterview = ExistingRecord.closeOutInterviewDate ?? DateTime.Today;
+            dateOfStudyTermination = ExistingRecord.dateOfTermination ?? DateTime.Today;
+            if (ExistingRecord.participantStatus != null)
+            {
+                participantStatus = ExistingRecord.participantStatus.choicesStudy;
+                if (ExistingRecord.participantStatus.incompleteReason != null)
+                {
+                    discontinuationReason = ExistingRecord.participantStatus.incompleteReason.incompletionOptions;
+                    discontinuationReasonDetail = ExistingRecord.participantStatus.incompleteReason.adverseEvent ??
+                                                  ExistingRecord.participantStatus.incompleteReason.protocolDeviation ??
+                                                  ExistingRecord.participantStatus.incompleteReason.withdrawalReason ??
+                                                  ExistingRecord.participantStatus.incompleteReason.otherReason ?? "";
+
+                    deathDate = ExistingRecord.participantStatus.incompleteReason.deathOption;
+                }
+            }
+        }
+    }
+
+    private void SetParticipantStatus(string status)
+    {
+        participantStatus = status;
+        if (status == "Completed study visits")
+        {
+            discontinuationReason = "";
+            discontinuationReasonDetail = "";
+        }
+        else if (status == "Screen failure before enrollment")
+        {
+            discontinuationReason = "Screen failure";
+        }
+        else
+        {
+            discontinuationReason = "";
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (ReadOnly) return;
+
+        if (string.IsNullOrEmpty(screeningId)) return;
+
+        if (participantStatus != "Completed study visits" && string.IsNullOrEmpty(discontinuationReason)) return;
+
+        if (discontinuationReason == "Death" && !deathDate.HasValue) return;
+
+        var record = new closeoutforms
+        {
+            sreeningId = screeningId,
+            closeOutInterviewDate = dateOfInterview,
+            dateOfTermination = dateOfStudyTermination,
+            participantStatus = new ParticipationStatus
+            {
+                choicesStudy = participantStatus,
+                incompleteReason = participantStatus != "Completed study visits" ? new IncompleteReason
+                {
+                    incompletionOptions = discontinuationReason,
+                    adverseEvent = discontinuationReason == "Adverse event" ? discontinuationReasonDetail : null,
+                    deathOption = discontinuationReason == "Death" ? deathDate : null,
+                    protocolDeviation = discontinuationReason == "Protocol deviation" ? discontinuationReasonDetail : null,
+                    withdrawalReason = discontinuationReason == "Withdrawal by participant" ? discontinuationReasonDetail : null,
+                    otherReason = discontinuationReason == "Other" ? discontinuationReasonDetail : null
+                } : null
+            }
+        };
+
+        if (ExistingRecord != null)
+        {
+            await ApiClient.UpdateCloseoutForm(record.sreeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+        }
+        else
+        {
+            await ApiClient.CreateCloseoutForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+        }
+
+        NavigationManager.NavigateTo("/records");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/records");
+    }
+}

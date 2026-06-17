@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maternity Health App</title>
+    <base href="/" />
+    <link href="css/app.css" rel="stylesheet" />
+    <!-- Adding Tailwind CSS from CDN for rapid setup since we don't have node_modules here yet -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="NewBlazor.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="app">
+        <div class="fixed inset-0 bg-slate-50 flex items-center justify-center">
+            <div class="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
+                <div class="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+                <p class="text-sm font-medium text-slate-700">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        window.downloadFile = (fileName, contentType, content) => {
+            const blazorDownloadFile = (fileName, contentType, content) => {
+                const file = new File([content], fileName, { type: contentType });
+                const exportUrl = URL.createObjectURL(file);
+                const a = document.createElement("a");
+                document.body.appendChild(a);
+                a.href = exportUrl;
+                a.download = fileName;
+                a.target = "_self";
+                a.click();
+                URL.revokeObjectURL(exportUrl);
+                a.remove();
+            };
+            blazorDownloadFile(fileName, contentType, content);
+        };
+    </script>
+</body>
+</html>
