@@ -15,22 +15,37 @@ namespace BlazorFrontend.Services
         // Screening
         public async Task<List<screeningforms>> GetAllScreeningForms()
         {
-            return await _http.GetFromJsonAsync<List<screeningforms>>("api/getScreeninForms") ?? new List<screeningforms>();
+            try
+            {
+                var response = await _http.GetAsync("getScreeninForms");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<screeningforms>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<screeningforms>>() ?? new List<screeningforms>();
+                }
+            }
+            catch
+            {
+                return new List<screeningforms>();
+            }
         }
 
         public async Task CreateScreeningForm(screeningforms record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createScreeningForm", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createScreeningForm", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateScreeningForm(string id, screeningforms record, string userInitials, string reason)
         {
-            await _http.PutAsJsonAsync($"api/updateScreeningForm/{id}", new { record, userInitials, reason });
+            await _http.PutAsJsonAsync($"updateScreeningForm/{id}", new { record, userInitials, reason });
         }
 
         public async Task DeleteScreeningForm(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/deleteScreeningForm/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteScreeningForm/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -40,22 +55,37 @@ namespace BlazorFrontend.Services
         // Enrollment
         public async Task<List<enrollmentforms>> GetAllEnrollmentForms()
         {
-            return await _http.GetFromJsonAsync<List<enrollmentforms>>("api/getEnrollment") ?? new List<enrollmentforms>();
+            try
+            {
+                var response = await _http.GetAsync("getEnrollment");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<enrollmentforms>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<enrollmentforms>>() ?? new List<enrollmentforms>();
+                }
+            }
+            catch
+            {
+                return new List<enrollmentforms>();
+            }
         }
 
         public async Task CreateEnrollmentForm(enrollmentforms record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createEnrollment", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createEnrollment", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateEnrollmentForm(string id, enrollmentforms record, string userInitials, string reason)
         {
-            await _http.PutAsJsonAsync($"api/updateEnrollment/{id}", new { record, userInitials, reason });
+            await _http.PutAsJsonAsync($"updateEnrollment/{id}", new { record, userInitials, reason });
         }
 
         public async Task DeleteEnrollmentForm(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/deleteEnrollment/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteEnrollment/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -65,22 +95,37 @@ namespace BlazorFrontend.Services
         // Delivery
         public async Task<List<deliveryforms>> GetAllDeliveryForms()
         {
-            return await _http.GetFromJsonAsync<List<deliveryforms>>("api/getDelivery") ?? new List<deliveryforms>();
+           try
+            {
+                var response = await _http.GetAsync("getDelivery");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<deliveryforms>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<deliveryforms>>() ?? new List<deliveryforms>();
+                }
+            }
+            catch
+            {
+                return new List<deliveryforms>();
+            }
         }
 
         public async Task CreateDeliveryForm(deliveryforms record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createDelivery", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createDelivery", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateDeliveryForm(string id, deliveryforms record, string userInitials, string reason)
         {
-            await _http.PutAsJsonAsync($"api/updateDelivery/{id}", new { record, userInitials, reason });
+            await _http.PutAsJsonAsync($"updateDelivery/{id}", new { record, userInitials, reason });
         }
 
         public async Task DeleteDeliveryForm(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/deleteDelivery/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteDelivery/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -90,22 +135,37 @@ namespace BlazorFrontend.Services
         // Closeout
         public async Task<List<closeoutforms>> GetAllCloseoutForms()
         {
-            return await _http.GetFromJsonAsync<List<closeoutforms>>("api/getCloseout") ?? new List<closeoutforms>();
+            try
+            {
+                var response = await _http.GetAsync("getCloseout");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<closeoutforms>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<closeoutforms>>() ?? new List<closeoutforms>();
+                }
+            }
+            catch
+            {
+                return new List<closeoutforms>();
+            }
         }
 
         public async Task CreateCloseoutForm(closeoutforms record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createCloseout", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createCloseout", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateCloseoutForm(string id, closeoutforms record, string userInitials, string reason)
         {
-            await _http.PutAsJsonAsync($"api/updateCloseout/{id}", new { record, userInitials, reason });
+            await _http.PutAsJsonAsync($"updateCloseout/{id}", new { record, userInitials, reason });
         }
 
         public async Task DeleteCloseoutForm(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/deleteCloseout/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteCloseout/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -115,17 +175,32 @@ namespace BlazorFrontend.Services
         // ANC
         public async Task<List<ancvisits>> GetAllAncVisits()
         {
-            return await _http.GetFromJsonAsync<List<ancvisits>>("api/getAncVisit") ?? new List<ancvisits>();
+            try
+            {
+                var response = await _http.GetAsync("getAncVisit");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<ancvisits>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<ancvisits>>() ?? new List<ancvisits>();
+                }
+            }
+            catch
+            {
+                return new List<ancvisits>();
+            }
         }
 
         public async Task CreateAncVisit(ancvisits record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createAncVisit", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createAncVisit", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task DeleteAncVisit(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/deleteAnc/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteAnc/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -135,17 +210,32 @@ namespace BlazorFrontend.Services
         // Gestation Age
         public async Task<List<gestationages>> GetAllGestAge()
         {
-            return await _http.GetFromJsonAsync<List<gestationages>>("api/getGestAge") ?? new List<gestationages>();
+            try
+            {
+                var response = await _http.GetAsync("getGestAge");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<gestationages>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<gestationages>>() ?? new List<gestationages>();
+                }
+            }
+            catch
+            {
+                return new List<gestationages>();
+            }
         }
 
         public async Task CreateGestAge(gestationages record, string userInitials)
         {
-            await _http.PostAsJsonAsync("api/createGestAge", new { record, userInitials, reason = "Initial Entry" });
+            await _http.PostAsJsonAsync("createGestAge", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateGestAge(string id, gestationages record, string userInitials, string reason)
         {
-            await _http.PutAsJsonAsync($"api/updateGestAge/{id}", new { record, userInitials, reason });
+            await _http.PutAsJsonAsync($"updateGestAge/{id}", new { record, userInitials, reason });
         }
 
         // Audit Logs
@@ -153,7 +243,15 @@ namespace BlazorFrontend.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<auditlogs>>("api/getAuditLog") ?? new List<auditlogs>();
+                var response = await _http.GetAsync("getAuditLog");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<auditlogs>(); // Return empty list instead of crashing
+                }else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<auditlogs>>() ?? new List<auditlogs>();
+                }
             }
             catch
             {
@@ -164,7 +262,7 @@ namespace BlazorFrontend.Services
         // Login
         public async Task<LoginResponse> UserLogin(string email, string userName, string fullName, string password)
         {
-            var response = await _http.PostAsJsonAsync("api/userLogin", new { email, userName, fullName, password, dateLoggedIn = DateTime.Now });
+            var response = await _http.PostAsJsonAsync("userLogin", new { email, userName, fullName, password, dateLoggedIn = DateTime.Now });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<LoginResponse>() ?? throw new Exception("Invalid login response");
         }
