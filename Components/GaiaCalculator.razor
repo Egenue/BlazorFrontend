@@ -285,12 +285,12 @@
                 lmpDate = p.gaParameters.lmpDate != DateTime.MinValue ? p.gaParameters.lmpDate : null;
                 lmpCertainty = p.gaParameters.lmpCertainty ?? "certain";
             }
-            else if (s != null && s.lastMensrualPeriod != null && s.lastMensrualPeriod.unknown != "true")
+            else if (s != null && s.lastMensrualPeriod != null && !s.lastMensrualPeriod.unknown)
             {
                 lmpDate = s.lastMensrualPeriod.date;
                 lmpCertainty = "certain";
             }
-            else if (s != null && s.lastMensrualPeriod != null && s.lastMensrualPeriod.unknown == "true")
+            else if (s != null && s.lastMensrualPeriod != null && s.lastMensrualPeriod.unknown)
             {
                 lmpDate = null;
                 lmpCertainty = "uncertain";

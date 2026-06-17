@@ -45,7 +45,7 @@ namespace BlazorFrontend.Models
         public LmpInfo? lastMensrualPeriod { get; set; }
 
         [JsonPropertyName("fundalHeight")]
-        public int? fundalHeight { get; set; }
+        public double? fundalHeight { get; set; }
 
         [JsonPropertyName("inclusionCriteria")]
         public InclusionCriteria? inclusionCriteria { get; set; }
@@ -111,7 +111,7 @@ namespace BlazorFrontend.Models
         public DateTime? date { get; set; }
 
         [JsonPropertyName("unknown")]
-        public string? unknown { get; set; } = string.Empty;
+        public bool unknown { get; set; }
     }
 
     public class VitalSignsInfo
