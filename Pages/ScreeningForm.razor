@@ -87,7 +87,7 @@
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">BMI</label>
-                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">@(BMI.HasValue ? BMI.value.ToString("F1") : "--.-")</div>
+                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">@(BMI.value ?? "--.-")</div>
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Temp (&deg;C)</label>
@@ -556,10 +556,10 @@
             BMI = BMI,
             vitalSigns = new VitalSignsInfo
             {
-                temperature = new TempInfo { value = temperatureC ?? 0, location = tempMethod },
-                respiratoryRate = respiratoryRate ?? 0,
-                pulseRate = pulseRate ?? 0,
-                bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 }
+                temperature = new TempInfo { value = temperatureC , location = tempMethod },
+                respiratoryRate = respiratoryRate,
+                pulseRate = pulseRate,
+                bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys , diastolic = bloodPressureDia }
             },
             lastMensrualPeriod = new LmpInfo { date = DateTime.Now, unknown = false },
             fundalHeight = 0,

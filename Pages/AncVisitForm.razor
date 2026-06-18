@@ -235,7 +235,7 @@
             {
                 _screeningId = $"{idParts[1]}-{idParts[2]}";
             }
-            visitDate = ExistingRecord.visitDate ?? DateTime.Today;
+            visitDate = ExistingRecord.visitDate;
             gestWeeks = ExistingRecord.gestationAge?.gestWeeks;
             gestDays = ExistingRecord.gestationAge?.gestDays;
             _weightKilos = ExistingRecord.weightKilos;
@@ -245,7 +245,7 @@
             muac = ExistingRecord.muac;
             complaints = ExistingRecord.complaints ?? "None";
             medicationGiven = ExistingRecord.medicationGiven ?? "None";
-            nextAppointment = ExistingRecord.nextAppointment ?? DateTime.Today.AddDays(7);
+            nextAppointment = ExistingRecord.nextAppointment;
         }
         RecalculateBMI();
     }

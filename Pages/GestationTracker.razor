@@ -159,7 +159,7 @@
             if (gestRecord?.currentGestAge != null)
             {
                 var enrDate = gestRecord.enrolmentDate ?? DateTime.Today;
-                var enrDays = (gestRecord.currentGestAge.gestweeks ?? 0) * 7 + (gestRecord.currentGestAge.gestdays ?? 0);
+                var enrDays = (gestRecord.currentGestAge.gestweeks) * 7 + (gestRecord.currentGestAge.gestdays);
                 var pregStartDate = enrDate.AddDays(-enrDays);
 
                 var currentDays = (int)Math.Round((today - pregStartDate).TotalDays);

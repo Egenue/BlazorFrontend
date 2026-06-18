@@ -217,15 +217,15 @@
     private string participantStatus = "Completed study visits";
     private string discontinuationReason = "";
     private string discontinuationReasonDetail = "";
-    private DateTime? deathDate = null;
+    private DateTime deathDate;
 
     protected override void OnInitialized()
     {
         if (ExistingRecord != null)
         {
             screeningId = ExistingRecord.sreeningId ?? "";
-            dateOfInterview = ExistingRecord.closeOutInterviewDate ?? DateTime.Today;
-            dateOfStudyTermination = ExistingRecord.dateOfTermination ?? DateTime.Today;
+            dateOfInterview = ExistingRecord.closeOutInterviewDate;
+            dateOfStudyTermination = ExistingRecord.dateOfTermination;
             if (ExistingRecord.participantStatus != null)
             {
                 participantStatus = ExistingRecord.participantStatus.choicesStudy;
@@ -269,7 +269,6 @@
 
         if (participantStatus != "Completed study visits" && string.IsNullOrEmpty(discontinuationReason)) return;
 
-        if (discontinuationReason == "Death" && !deathDate.HasValue) return;
 
         var record = new closeoutforms
         {
@@ -283,7 +282,7 @@
                 {
                     incompletionOptions = discontinuationReason,
                     adverseEvent = discontinuationReason == "Adverse event" ? discontinuationReasonDetail : null,
-                    deathOption = discontinuationReason == "Death" ? deathDate : null,
+                    deathOption = deathDate,
                     protocolDeviation = discontinuationReason == "Protocol deviation" ? discontinuationReasonDetail : null,
                     withdrawalReason = discontinuationReason == "Withdrawal by participant" ? discontinuationReasonDetail : null,
                     otherReason = discontinuationReason == "Other" ? discontinuationReasonDetail : null
