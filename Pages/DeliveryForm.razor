@@ -478,7 +478,7 @@
         if (ExistingRecord != null)
         {
             _screeningId = ExistingRecord.deliveryScreeningId ?? "";
-            dateOfInterview = ExistingRecord.interviewDate ?? DateTime.Now;
+            dateOfInterview = ExistingRecord.interviewDate;
             _motherWeightKg = ExistingRecord.physicalExam?.motherWeight;
             temperatureC = ExistingRecord.physicalExam?.vitalSigns?.temperature?.tempValue;
             tempMethod = ExistingRecord.physicalExam?.vitalSigns?.temperature?.location ?? "Oral";

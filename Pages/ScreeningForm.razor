@@ -87,7 +87,7 @@
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">BMI</label>
-                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">@(BMI.HasValue ? BMI.Value.ToString("F1") : "--.-")</div>
+                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">@(BMI.HasValue ? BMI.value.ToString("F1") : "--.-")</div>
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Temp (&deg;C)</label>
@@ -338,24 +338,24 @@
         set { _weightKg = value; RecalculateBMI(); }
     }
 
-    private double? BMI;
+    private double BMI;
 
-    private double? temperatureC;
+    private double temperatureC;
     private string tempMethod = "Oral";
-    private int? respiratoryRate;
-    private int? pulseRate;
-    private int? bloodPressureSys;
-    private int? bloodPressureDia;
+    private int respiratoryRate;
+    private int pulseRate;
+    private int bloodPressureSys;
+    private int bloodPressureDia;
 
-    private bool? _incVillage15km = null;
-    private bool? incVillage15km
+    private bool _incVillage15km ;
+    private bool incVillage15km
     {
         get => _incVillage15km;
         set { _incVillage15km = value; CheckEligibility(); }
     }
 
-    private bool? _incPregnancyConfirmed = null;
-    private bool? incPregnancyConfirmed
+    private bool _incPregnancyConfirmed;
+    private bool incPregnancyConfirmed
     {
         get => _incPregnancyConfirmed;
         set { _incPregnancyConfirmed = value; CheckEligibility(); }
@@ -422,19 +422,19 @@
         {
             _screeningId = ExistingRecord.screeningId ?? "";
             facility = ExistingRecord.healthFacility ?? "Bondo";
-            _dateOfInterview = ExistingRecord.interviewDate ?? DateTime.Now;
-            _dateOfBirth = ExistingRecord.DoB ?? new DateTime(1990, 1, 1);
+            _dateOfInterview = ExistingRecord.interviewDate;
+            _dateOfBirth = ExistingRecord.DoB;
             ageYears = ExistingRecord.Age?.years ?? 0;
             ageMonths = ExistingRecord.Age?.months ?? 0;
             _heightCm = ExistingRecord.height;
             _weightKg = ExistingRecord.weight;
             BMI = ExistingRecord.BMI;
-            temperatureC = ExistingRecord.vitalSigns?.temperature?.value;
-            tempMethod = ExistingRecord.vitalSigns?.temperature?.location ?? "Oral";
-            respiratoryRate = ExistingRecord.vitalSigns?.respiratoryRate;
-            pulseRate = ExistingRecord.vitalSigns?.pulseRate;
-            bloodPressureSys = ExistingRecord.vitalSigns?.bloodPressure?.systolic;
-            bloodPressureDia = ExistingRecord.vitalSigns?.bloodPressure?.diastolic;
+            temperatureC = ExistingRecord.vitalSigns.temperature.value;
+            tempMethod = ExistingRecord.vitalSigns.temperature.location ?? "Oral";
+            respiratoryRate = ExistingRecord.vitalSigns.respiratoryRate;
+            pulseRate = ExistingRecord.vitalSigns.pulseRate;
+            bloodPressureSys = ExistingRecord.vitalSigns.bloodPressure.systolic;
+            bloodPressureDia = ExistingRecord.vitalSigns.bloodPressure.diastolic;
             _incVillage15km = ExistingRecord.inclusionCriteria?.residentWithin15km == "Yes";
             _incPregnancyConfirmed = ExistingRecord.inclusionCriteria?.pregnancyConfirmed == "Yes";
             _incGestation31wks = ExistingRecord.inclusionCriteria?.gestationLessThan31Weeks == "Yes";
@@ -492,7 +492,7 @@
         }
         else
         {
-            BMI = null;
+            BMI = 0;
         }
     }
 

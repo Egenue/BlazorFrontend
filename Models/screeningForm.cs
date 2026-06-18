@@ -12,7 +12,7 @@ namespace BlazorFrontend.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonPropertyName("_id")]
-        public required string _id { get; set; }
+        public string? _id { get; set; }
 
         [JsonPropertyName("screeningId")]
         public required string screeningId { get; set; }

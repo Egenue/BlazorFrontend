@@ -57,7 +57,7 @@
                             @foreach (var cand in FilteredEligibleList)
                             {
                                 <option value="@cand.screeningId">
-                                    @cand.screeningId - @cand.healthFacility (DOB: @(cand.DoB?.ToString("dd-MMM-yyyy") ?? "N/A"))
+                                    @cand.screeningId - @cand.healthFacility (DOB: @(cand.DoB.ToString("dd-MMM-yyyy") ?? "N/A"))
                                 </option>
                             }
                         </select>
@@ -387,7 +387,7 @@
         if (origin != null && ExistingRecord == null)
         {
             facility = origin.healthFacility ?? "Bondo";
-            dateOfBirth = origin.DoB ?? DateTime.MinValue;
+            dateOfBirth = origin.DoB;
             ageYears = origin.Age?.years ?? 0;
             ageMonths = origin.Age?.months ?? 0;
             _heightCm = origin.height;
