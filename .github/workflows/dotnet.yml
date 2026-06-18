@@ -21,10 +21,8 @@ jobs:
       with:
         dotnet-version: '10.0.x'
     - name: Restore dependencies
-      run: dotnet restore BlazorFrontend/BlazorFrontend.csproj
+      run: dotnet restore
     - name: Build
-      run: dotnet build BlazorFrontend/BlazorFrontend.csproj --configuration Release --no-restore
+      run: dotnet build --configuration --no-restore
     # - name: Test
     #   run: dotnet test --no-build --verbosity normal
-    - name: Publish
-      run: dotnet publish BlazorFrontend/BlazorFrontend.csproj -c Release -o release
