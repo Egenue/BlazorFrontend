@@ -180,7 +180,7 @@
 
     private string GetSubmittedAt()
     {
-        if (Record is closeoutforms clo) return clo.submittedAt?.ToString("g") ?? "N/A";
+        if (Record is closeoutforms clo) return clo.submittedAt.ToString("g") ?? "N/A";
         return "N/A";
     }
 }

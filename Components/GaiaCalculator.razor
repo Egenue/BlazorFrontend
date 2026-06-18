@@ -282,7 +282,7 @@
                 ultrasoundDate = p.gaParameters.ultrasoundDate;
                 usWeeks = p.gaParameters.usWeeks ?? 0;
                 usDays = p.gaParameters.usDays ?? 0;
-                lmpDate = p.gaParameters.lmpDate != DateTime.MinValue ? p.gaParameters.lmpDate : null;
+                lmpDate = p.gaParameters.lmpDate;
                 lmpCertainty = p.gaParameters.lmpCertainty ?? "certain";
             }
             else if (s != null && s.lastMensrualPeriod != null && !s.lastMensrualPeriod.unknown)
@@ -292,7 +292,6 @@
             }
             else if (s != null && s.lastMensrualPeriod != null && s.lastMensrualPeriod.unknown)
             {
-                lmpDate = null;
                 lmpCertainty = "uncertain";
             }
 
@@ -412,7 +411,7 @@
             var gestationPayload = new gestationages
             {
                 screeningId = _selectedParticipantId,
-                lmp = lmpDate,
+                lmp = lmpDate ?? DateTime.MinValue,
                 ultrasoundDate = new UltrasoundDateInfo { usWeeks = usWeeks, usDays = usDays },
                 lmpCertainty = lmpCertainty,
                 enrolmentDate = enrolmentDate,
@@ -439,7 +438,7 @@
                     ultrasoundDate = ultrasoundDate ?? DateTime.MinValue,
                     usWeeks = usWeeks,
                     usDays = usDays,
-                    lmpDate = lmpDate ?? DateTime.MinValue,
+                    lmpDate = lmpDate,
                     lmpCertainty = lmpCertainty,
                     calculatedTrimester = result.Trimester,
                     finalPregnancyStartDate = result.FinalPregnancyStartDate,
