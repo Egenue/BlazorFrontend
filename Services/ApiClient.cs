@@ -15,21 +15,15 @@ namespace BlazorFrontend.Services
         // Screening
         public async Task<List<screeningforms>> GetAllScreeningForms()
         {
-            try
+            var response = await _http.GetAsync("getScreeninForms");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                var response = await _http.GetAsync("getScreeninForms");
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return new List<screeningforms>(); // Return empty list instead of crashing
-                }else
-                {
-                    response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadFromJsonAsync<List<screeningforms>>() ?? new List<screeningforms>();
-                }
-            }
-            catch
+                return new List<screeningforms>(); // Return empty list instead of crashing
+            }else
             {
-                return new List<screeningforms>();
+                response.EnsureSuccessStatusCode();
+                var result  = await response.Content.ReadFromJsonAsync<List<screeningforms>>();
+                return result;
             }
         }
 

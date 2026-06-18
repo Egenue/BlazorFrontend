@@ -40,6 +40,11 @@ namespace BlazorFrontend.lib
             };
         }
 
+        public static string FormatDateUtil(DateTime newateUtil)
+        {
+            return newateUtil.ToShortDateString();
+        }
+
         public static bool IsValidDob(string dobString)
         {
             if (string.IsNullOrEmpty(dobString) || !DateTime.TryParse(dobString, out var dob))

@@ -8,6 +8,7 @@
 @using BlazorFrontend.Components
 @using System.Reflection
 @using System.Text
+@using System.Text.Json
 
 <div class="space-y-6">
     <div class="bg-white border border-slate-150 p-5 rounded-2xl shadow-xs space-y-4">
@@ -199,7 +200,7 @@
                                     @if (activeTable == "screening" && record is screeningforms scr)
                                     {
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@scr.healthFacility</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(scr.interviewDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(scr.interviewDate)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(scr.Age?.years)y</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@scr.BMI</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-xs text-center">
@@ -219,15 +220,15 @@
                                     }
                                     else if (activeTable == "anc" && record is ancvisits anc)
                                     {
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(anc.visitDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(anc.visitDate)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(anc.gestationAge?.gestWeeks)w</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@anc.weightKilos</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-semibold text-rose-700">@(anc.bloodPressure?.systolic)/@(anc.bloodPressure?.diastolic)</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatToDdmMmyyyy(anc.nextAppointment)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatDateUtil(anc.nextAppointment)</td>
                                     }
                                     else if (activeTable == "delivery" && record is deliveryforms del)
                                     {
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(del.deliveryHistory?.deliveryDate)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(del.deliveryHistory.deliveryDate)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@del.deliveryHistory?.deliveryPlace?.deliveryChoices</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@(del.bodyMassIndex?.value?.ToString("F1") ?? "-")</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
@@ -235,7 +236,7 @@
                                     }
                                     else if (activeTable == "closeout" && record is closeoutforms clo)
                                     {
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatToDdmMmyyyy(clo.dateOfTermination)</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(clo.dateOfTermination)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold text-slate-600 truncate max-w-[120px]">@clo.participantStatus?.choicesStudy</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-rose-700 font-bold truncate max-w-[100px]">@(clo.participantStatus?.incompleteReason?.incompletionOptions ?? "Graduated")</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
@@ -457,7 +458,7 @@
         if (!records.Any()) return;
 
         var csv = GenerateCSV(records);
-        var fileName = $"{activeTable}_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        var fileName = $"{activeTable}_export_{DateTime.Now:yyyyMMdd_HHmm}.csv";
         await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "text/csv", Encoding.UTF8.GetBytes(csv));
     }
 
@@ -466,7 +467,7 @@
         var records = FilteredAndSortedRecords();
         if (!records.Any()) return;
 
-        var json = System.Text.Json.JsonSerializer.Serialize(records, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(records, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         var fileName = $"{activeTable}_export_{DateTime.Now:yyyyMMdd_HHmmss}.json";
         await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "application/json", Encoding.UTF8.GetBytes(json));
     }
@@ -490,7 +491,18 @@
             var values = props.Select(p => {
                 var val = p.GetValue(record);
                 if (val == null) return "";
-                var s = val.ToString() ?? "";
+                
+                string s;
+                var t = val.GetType();
+                if (t.IsPrimitive || val is string || val is DateTime || val is decimal)
+                {
+                    s = val.ToString() ?? "";
+                }
+                else
+                {
+                    s = System.Text.Json.JsonSerializer.Serialize(val);
+                }
+
                 if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
                     s = "\"" + s.Replace("\"", "\"\"") + "\"";
                 return s;

@@ -7,7 +7,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var apiUrl = builder.Configuration["BaseApiUrl"] ?? "http://localhost:3000/";
+var apiUrl = builder.Configuration["BaseApiUrl"];
 
 builder.Services.AddScoped(sp => new HttpClient
 { 

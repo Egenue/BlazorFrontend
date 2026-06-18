@@ -16,19 +16,19 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("sreeningId")]
-        public string? sreeningId { get; set; }
+        public required string sreeningId { get; set; }
 
         [JsonPropertyName("closeOutInterviewDate")]
-        public DateTime? closeOutInterviewDate { get; set; }
+        public DateTime closeOutInterviewDate { get; set; }
 
         [JsonPropertyName("dateOfTermination")]
-        public DateTime? dateOfTermination { get; set; }
+        public DateTime dateOfTermination { get; set; }
 
         [JsonPropertyName("participantStatus")]
         public ParticipationStatus? participantStatus { get; set; }
 
         [JsonPropertyName("submittedAt")]
-        public DateTime? submittedAt { get; set; }
+        public DateTime submittedAt { get; set; }
 
         [JsonPropertyName("submittedBy")]
         public string? submittedBy { get; set; }
@@ -52,7 +52,7 @@ namespace BlazorFrontend.Models
         public string? adverseEvent { get; set; }
 
         [JsonPropertyName("deathOption")]
-        public DateTime? deathOption { get; set; }
+        public DateTime deathOption { get; set; }
 
         [JsonPropertyName("protocolDeviation")]
         public string? protocolDeviation { get; set; }

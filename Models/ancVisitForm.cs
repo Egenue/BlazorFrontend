@@ -16,10 +16,10 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("visitNumber")]
-        public string? visitNumber { get; set; }
+        public required string visitNumber { get; set; }
 
         [JsonPropertyName("visitDate")]
-        public DateTime? visitDate { get; set; } = DateTime.Today;
+        public DateTime visitDate { get; set; } = DateTime.Today;
 
         [JsonPropertyName("gestationAge")]
         public GestationAgeInfo? gestationAge { get; set; }
@@ -43,7 +43,7 @@ namespace BlazorFrontend.Models
         public string? medicationGiven { get; set; } = string.Empty;
 
         [JsonPropertyName("nextAppointment")]
-        public DateTime? nextAppointment { get; set; }
+        public DateTime nextAppointment { get; set; }
     }
 
     public class GestationAgeInfo

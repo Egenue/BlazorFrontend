@@ -15,10 +15,10 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("interviewDate")]
-        public DateTime? interviewDate { get; set; } = DateTime.Now;
+        public DateTime interviewDate { get; set; } = DateTime.Now;
 
         [JsonPropertyName("deliveryScreeningId")]
-        public string? deliveryScreeningId { get; set; }
+        public required string deliveryScreeningId { get; set; }
 
         [JsonPropertyName("physicalExam")]
         public PhysicalExamInfo? physicalExam { get; set; }
@@ -30,7 +30,7 @@ namespace BlazorFrontend.Models
         public MotherAbnomarlity? motherAbnormality { get; set; }
 
         [JsonPropertyName("deliveryHistory")]
-        public DeliveryHistory? deliveryHistory { get; set; }
+        public required DeliveryHistory deliveryHistory { get; set; }
 
         [JsonPropertyName("closeOut")]
         public closeoutforms? closeOut { get; set; }
@@ -57,7 +57,7 @@ namespace BlazorFrontend.Models
     public class DeliveryHistory
     {
         [JsonPropertyName("deliveryDate")]
-        public DateTime? deliveryDate { get; set; }
+        public DateTime deliveryDate { get; set; }
 
         [JsonPropertyName("deliveryTime")]
         public string? deliveryTime { get; set; } = string.Empty;

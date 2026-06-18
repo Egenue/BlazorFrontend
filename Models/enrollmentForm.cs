@@ -15,10 +15,10 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("screeningId")]
-        public string? screeningId { get; set; }
+        public required string screeningId { get; set; }
 
         [JsonPropertyName("healthFacility")]
-        public string? healthFacility { get; set; }
+        public required string healthFacility { get; set; }
 
         [JsonPropertyName("DoB")]
         public DateTime? DoB { get; set; }
