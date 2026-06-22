@@ -41,8 +41,8 @@ namespace BlazorFrontend.Models
         [JsonPropertyName("vitalSigns")]
         public required VitalSignsInfo vitalSigns { get; set; }
 
-        [JsonPropertyName("lastMensrualPeriod")]
-        public required LmpInfo lastMensrualPeriod { get; set; }
+        [JsonPropertyName("lastMenstrualPeriod")]
+        public LmpInfo? lastMenstrualPeriod { get; set; }
 
         [JsonPropertyName("fundalHeight")]
         public double fundalHeight { get; set; }
@@ -108,10 +108,10 @@ namespace BlazorFrontend.Models
     public class LmpInfo
     {
         [JsonPropertyName("date")]
-        public DateTime date { get; set; }
+        public DateTime? date { get; set; }
 
         [JsonPropertyName("unknown")]
-        public bool unknown { get; set; }
+        public bool? unknown { get; set; }
     }
 
     public class VitalSignsInfo

@@ -217,7 +217,7 @@
     public EventCallback OnClose { get; set; }
 
     private string mode = "screening";
-    private List<enrollmentforms> enrolledParticipants = new();
+    private List<enrollmentforms> enrolledParticipants = new List<enrollmentforms>();
     
     private string idSearchQuery = "";
     private List<enrollmentforms> FilteredParticipants => string.IsNullOrWhiteSpace(idSearchQuery)
@@ -269,31 +269,18 @@
     {
         if (string.IsNullOrEmpty(_selectedParticipantId)) return;
 
-        var p = enrolledParticipants.FirstOrDefault(x => x.screeningId == _selectedParticipantId);
-        var s = Db.Screening.FirstOrDefault(x => x.screeningId == _selectedParticipantId);
+        enrollmentforms? p = enrolledParticipants.FirstOrDefault(x => x.screeningId == _selectedParticipantId);
+        screeningforms? s = Db.Screening.FirstOrDefault(x => x.screeningId == _selectedParticipantId);
 
         if (p != null)
         {
             result = null;
             saveStatus = null;
-
-            if (p.gaParameters != null)
-            {
-                ultrasoundDate = p.gaParameters.ultrasoundDate;
-                usWeeks = p.gaParameters.usWeeks ?? 0;
-                usDays = p.gaParameters.usDays ?? 0;
-                lmpDate = p.gaParameters.lmpDate;
-                lmpCertainty = p.gaParameters.lmpCertainty ?? "certain";
-            }
-            else if (s != null && s.lastMensrualPeriod != null && !s.lastMensrualPeriod.unknown)
-            {
-                lmpDate = s.lastMensrualPeriod.date;
-                lmpCertainty = "certain";
-            }
-            else if (s != null && s.lastMensrualPeriod != null && s.lastMensrualPeriod.unknown)
-            {
-                lmpCertainty = "uncertain";
-            }
+            ultrasoundDate = p.gaParameters.ultrasoundDate;
+            usWeeks = p.gaParameters.usWeeks ?? 0;
+            usDays = p.gaParameters.usDays ?? 0;
+            lmpDate = p.gaParameters.lmpDate;
+            lmpCertainty = p.gaParameters.lmpCertainty ?? "certain";
 
             enrolmentDate = p.submittedAt ?? DateTime.Now;
             if (enrolmentDate == DateTime.MinValue) enrolmentDate = DateTime.Now;

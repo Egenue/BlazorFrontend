@@ -19,14 +19,14 @@
         </button>
     </div>
 
-    <EditForm Model="this" OnSubmit="HandleSubmit" class="space-y-6">
+    <EditForm Model="this" OnValidSubmit="HandleSubmit" class="space-y-6">
         <!-- Core Administrative Header -->
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
                 <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                     Screening ID <span class="text-red-500">*</span>
                 </label>
-                <input type="text" required disabled="@(ExistingRecord != null || ReadOnly)" @bind="screeningId" @bind:event="oninput"
+                <input type="text" required disabled="@(ExistingRecord != null || ReadOnly)" @bind="screeningId" 
                        class="block w-full px-2.5 py-1.5 bg-white border rounded-lg text-slate-900 font-mono text-xs font-bold @(string.IsNullOrEmpty(idError) ? "border-slate-200" : "border-red-500")" />
             </div>
 
@@ -46,14 +46,14 @@
                 <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                     Interview Date <span class="text-red-500">*</span>
                 </label>
-                <input type="date" required disabled="@ReadOnly" @bind="dateOfInterview" @bind:event="oninput" max="@DateTime.Now.ToString("yyyy-MM-dd")" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs" />
+                <input type="date" required disabled="@ReadOnly" @bind="dateOfInterview" max="@DateTime.Now.ToString("yyyy-MM-dd")" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs" />
             </div>
 
             <div>
                 <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                     Date of Birth <span class="text-red-500">*</span>
                 </label>
-                <input type="date" required disabled="@ReadOnly" @bind="dateOfBirth" @bind:event="oninput" min="1972-01-01" max="2006-01-01" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs" />
+                <input type="date" required disabled="@ReadOnly" @bind="dateOfBirth" min="1972-01-01" max="2006-01-01" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs" />
             </div>
 
             <div>
@@ -79,20 +79,20 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Height (cm)</label>
-                    <input type="number" required min="30" max="250" disabled="@ReadOnly" @bind="heightCm" @bind:event="oninput" class="block w-full px-2.5 py-1.5 bg-white border rounded-lg text-xs @(heightStatus?.BlockEntry == true ? "border-red-500 ring-1 ring-red-500" : "border-slate-200")" />
+                    <input type="number" required min="30" max="250" disabled="@ReadOnly" @bind="heightCm"  class="block w-full px-2.5 py-1.5 bg-white border rounded-lg text-xs @(heightStatus?.BlockEntry == true ? "border-red-500 ring-1 ring-red-500" : "border-slate-200")" />
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Weight (kg)</label>
-                    <input type="number" step="0.1" min="0" max="500" required disabled="@ReadOnly" @bind="weightKg" @bind:event="oninput" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+                    <input type="number" step="0.1" min="0" max="500" required disabled="@ReadOnly" @bind="weightKg"  class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">BMI</label>
-                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">@(BMI != 0 ? BMI.ToString("F1") : "--.-")</div>
+                    <div class="bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700" aria-placeholder=""--.-"">@(BMI)</div>
                 </div>
                 <div>
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Temp (&deg;C)</label>
                     <div class="flex">
-                        <input type="number" min="20" max="50" step="0.1" required disabled="@ReadOnly" @bind="temperatureC" @bind:event="oninput" class="block w-full px-2 py-1.5 bg-white border border-slate-200 rounded-l-lg text-xs" />
+                        <input type="number" min="20" max="50" step="0.1" required disabled="@ReadOnly" @bind="temperatureC"  class="block w-full px-2 py-1.5 bg-white border border-slate-200 rounded-l-lg text-xs" />
                         <select disabled="@ReadOnly" @bind="tempMethod" class="px-1.5 bg-slate-50 border border-slate-200 border-l-0 rounded-r-lg text-[9px]">
                             <option value="Oral">O</option>
                             <option value="Axillary">A</option>
@@ -104,10 +104,10 @@
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Respiratory Rate / Pulse Rate</label>
                     <div class="flex gap-1.5">
                         <div>
-                            <input type="number" required min="0" max="100" disabled="@ReadOnly" @bind="respiratoryRate" @bind:event="oninput" class="block w-full pl-2.5 py-1.5 pr-2 bg-white border rounded border-slate-200 rounded-lg text-xs font-small" />
+                            <input type="number" required min="0" max="100" disabled="@ReadOnly" @bind="respiratoryRate" class="block w-full pl-2.5 py-1.5 pr-2 bg-white border rounded border-slate-200 rounded-lg text-xs font-small" />
                         </div>
                         <div>
-                            <input type="number" required min="0" max="200" disabled="@ReadOnly" @bind="pulseRate" @bind:event="oninput" class="block w-full pl-2.5 pr-2 py-1.5 bg-white border rounded border-slate-200 rounded-lg text-xs font-medium" />
+                            <input type="number" required min="0" max="200" disabled="@ReadOnly" @bind="pulseRate" class="block w-full pl-2.5 pr-2 py-1.5 bg-white border rounded border-slate-200 rounded-lg text-xs font-medium" />
                         </div>
                     </div>
                 </div>
@@ -115,11 +115,11 @@
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Blood Pressure</label>
                     <div class="flex items-center gap-1">
                         <div>
-                            <input type="number" required min="0" max="250" disabled="@ReadOnly" @bind="bloodPressureSys" @bind:event="oninput" class="block w-full pl-2.5 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Systolic" />
+                            <input type="number" required min="0" max="250" disabled="@ReadOnly" @bind="bloodPressureSys"  class="block w-full pl-2.5 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Systolic" />
                         </div>
                         <span class="text-slate-300 font-bold">/</span>
                         <div>
-                            <input type="number" required min="0" max="200" disabled="@ReadOnly" @bind="bloodPressureDia" @bind:event="oninput" class="block w-full pl-2.5 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Diastolic" />
+                            <input type="number" required min="0" max="200" disabled="@ReadOnly" @bind="bloodPressureDia"  class="block w-full pl-2.5 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="Diastolic" />
                         </div>
                     </div>
                 </div>
@@ -340,12 +340,12 @@
 
     private double BMI;
 
-    private double? temperatureC;
+    private double temperatureC;
     private string tempMethod = "Oral";
-    private int? respiratoryRate;
-    private int? pulseRate;
-    private int? bloodPressureSys;
-    private int? bloodPressureDia;
+    private int respiratoryRate;
+    private int pulseRate;
+    private int bloodPressureSys;
+    private int bloodPressureDia;
 
     private bool? _incVillage15km = null;
     private bool? incVillage15km
@@ -429,12 +429,12 @@
             _heightCm = ExistingRecord.height;
             _weightKg = ExistingRecord.weight;
             BMI = ExistingRecord.BMI;
-            temperatureC = ExistingRecord.vitalSigns?.temperature?.value;
+            temperatureC = ExistingRecord.vitalSigns.temperature.value;
             tempMethod = ExistingRecord.vitalSigns?.temperature?.location ?? "Oral";
-            respiratoryRate = ExistingRecord.vitalSigns?.respiratoryRate;
-            pulseRate = ExistingRecord.vitalSigns?.pulseRate;
-            bloodPressureSys = ExistingRecord.vitalSigns?.bloodPressure?.systolic;
-            bloodPressureDia = ExistingRecord.vitalSigns?.bloodPressure?.diastolic;
+            respiratoryRate = ExistingRecord.vitalSigns.respiratoryRate;
+            pulseRate = ExistingRecord.vitalSigns.pulseRate;
+            bloodPressureSys = ExistingRecord.vitalSigns.bloodPressure.systolic;
+            bloodPressureDia = ExistingRecord.vitalSigns.bloodPressure.diastolic;
             _incVillage15km = ExistingRecord.inclusionCriteria?.residentWithin15km == "Yes";
             _incPregnancyConfirmed = ExistingRecord.inclusionCriteria?.pregnancyConfirmed == "Yes";
             _incGestation31wks = ExistingRecord.inclusionCriteria?.gestationLessThan31Weeks == "Yes";
@@ -530,19 +530,24 @@
 
         if (!string.IsNullOrEmpty(idError))
         {
-            // Trigger alert or similar in Blazor
+            Console.WriteLine($"Submission blocked: ID Error present ({idError})");
             return;
         }
 
         if (heightStatus?.BlockEntry == true)
         {
+            Console.WriteLine("Submission blocked: Height status validation blocking entry.");
             return;
         }
 
         if (!DateUtils.IsValidDob(dateOfBirth.ToString("yyyy-MM-dd")))
         {
+            Console.WriteLine($"Submission blocked: Invalid Date of Birth string ({dateOfBirth})");
             return;
         }
+
+        // Process submission data...
+        Console.WriteLine("Validation passed. Sending payload to API...");
 
         var record = new screeningforms
         {
@@ -556,12 +561,12 @@
             BMI = BMI,
             vitalSigns = new VitalSignsInfo
             {
-                temperature = new TempInfo { value = temperatureC ?? 0, location = tempMethod },
-                respiratoryRate = respiratoryRate ?? 0,
-                pulseRate = pulseRate ?? 0,
-                bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 }
+                temperature = new TempInfo { value = temperatureC, location = tempMethod },
+                respiratoryRate = respiratoryRate ,
+                pulseRate = pulseRate,
+                bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys , diastolic = bloodPressureDia }
             },
-            lastMensrualPeriod = new LmpInfo { date = DateTime.Now, unknown = false },
+            lastMenstrualPeriod = new LmpInfo { date = DateTime.Now, unknown = true },
             fundalHeight = 0,
             inclusionCriteria = new InclusionCriteria
             {

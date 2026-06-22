@@ -4,9 +4,9 @@ namespace BlazorFrontend.Services
 {
     public class AppState
     {
-        public CurrentUser? CurrentUser { get; private set; }
+        public CurrentUser CurrentUser { get; private set; }
         
-        public event Action? OnChange;
+        public event Action OnChange;
         
         public void Login(CurrentUser user)
         {
