@@ -1,6 +1,7 @@
 @page "/login"
 @inject ApiClient ApiClient
 @inject AppState AppState
+@inject NavigationManager NavigationManager
 
 <div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center animate-fade-in">
@@ -20,6 +21,16 @@
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md animate-slide-in">
         <div class="bg-white py-8 px-4 shadow-xl border border-slate-100 rounded-2xl sm:px-10">
             <EditForm Model="@this" OnValidSubmit="HandleSubmit" class="space-y-6">
+                @if (!string.IsNullOrEmpty(inactivityMessage))
+                {
+                    <div class="p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700 font-medium flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>@inactivityMessage</span>
+                    </div>
+                }
+
                 @if (!string.IsNullOrEmpty(error))
                 {
                     <div class="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
@@ -104,6 +115,16 @@
     private string role = "technician";
     private string error = "";
     private bool isLoading = false;
+    private string inactivityMessage = "";
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.Uri;
+        if (uri.Contains("reason=inactivity"))
+        {
+            inactivityMessage = "You have been logged out due to inactivity to secure session data.";
+        }
+    }
 
     private string GetInitials(string nameInput)
     {

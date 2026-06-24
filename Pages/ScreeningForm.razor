@@ -112,6 +112,14 @@
                     </div>
                 </div>
                 <div class="lg:col-span-1">
+                    <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Fundal Height</label>
+                    <div class="flex items-center gap-1">
+                        <div>
+                            <input type="number" required min="20" max="45" disabled="@ReadOnly" @bind="fundalheight"  class="block w-full pl-2.5 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-center" placeholder="FunHeight" />
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1">
                     <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Blood Pressure</label>
                     <div class="flex items-center gap-1">
                         <div>
@@ -360,7 +368,7 @@
     private int? pulseRate;
     private int? bloodPressureSys;
     private int? bloodPressureDia;
-    private int fundalHeight;
+    private double fundalheight;
     private DateTime? lmpDate = DateTime.Now;
     private bool? lmpUnknown;
     private bool? _incVillage15km = null;
@@ -451,6 +459,7 @@
             pulseRate = ExistingRecord.vitalSigns.pulseRate;
             bloodPressureSys = ExistingRecord.vitalSigns.bloodPressure.systolic;
             bloodPressureDia = ExistingRecord.vitalSigns.bloodPressure.diastolic;
+            fundalheight = ExistingRecord.fundalHeight;
             lmpDate = ExistingRecord.lastMenstrualPeriod.date;
             lmpUnknown = ExistingRecord.lastMenstrualPeriod?.unknown;
             _incVillage15km = ExistingRecord.inclusionCriteria?.residentWithin15km == "Yes";
@@ -585,7 +594,7 @@
                 bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys , diastolic = bloodPressureDia }
             },
             lastMenstrualPeriod = new LmpInfo { date = DateTime.Now, unknown = true },
-            fundalHeight = 0.1,
+            fundalHeight = fundalheight,
             inclusionCriteria = new InclusionCriteria
             {
                 residentWithin15km = incVillage15km == true ? "Yes" : "No",

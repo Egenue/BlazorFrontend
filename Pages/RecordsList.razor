@@ -173,6 +173,7 @@
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Module</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Record ID</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                                <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         }
                     </thead>
@@ -185,13 +186,18 @@
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@aud.timestamp.ToString("g")</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@aud.userInitials</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px]">
-                                        <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(aud.action == "Create" ? "bg-emerald-50 text-emerald-700" : aud.action == "Update" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
+                                        <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(aud.action == "Create" || aud.action == "CREATE" ? "bg-emerald-50 text-emerald-700" : aud.action == "Update" || aud.action == "UPDATE" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
                                             @aud.action
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px]">@aud.module</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono">@aud.recordId</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500">@aud.reason</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-right text-[10px] font-medium">
+                                        <button @onclick="@(() => ViewRecord(record))" class="p-1 text-slate-500 hover:text-indigo-600" title="View Audit Details">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                        </button>
+                                    </td>
                                 }
                                 else
                                 {

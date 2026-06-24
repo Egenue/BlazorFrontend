@@ -1,7 +1,9 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject AppState AppState
 @inject ApiClient ApiClient
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 @if (AppState.CurrentUser == null)
 {
@@ -131,6 +133,7 @@ else
     public DatabaseState Db { get; private set; } = new DatabaseState();
     private bool isLoading = false;
     private string? apiError = null;
+    private DotNetObjectReference<MainLayout>? objRef;
 
     protected override async Task OnInitializedAsync()
     {
@@ -138,6 +141,39 @@ else
         {
             await FetchDataFromBackend();
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AppState.CurrentUser != null)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            // Default timeout: 3 minutes (180000 ms) of inactivity
+            await JSRuntime.InvokeVoidAsync("inactivityTracker.start", objRef, 180000);
+        }
+    }
+
+    [JSInvokable]
+    public void OnSessionTimeout()
+    {
+        try
+        {
+            JSRuntime.InvokeVoidAsync("inactivityTracker.stop");
+        }
+        catch { }
+        
+        AppState.Logout();
+        NavigationManager.NavigateTo("/login?reason=inactivity");
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+        try
+        {
+            JSRuntime.InvokeVoidAsync("inactivityTracker.stop");
+        }
+        catch { }
     }
 
     public async Task FetchDataFromBackend()
@@ -187,6 +223,11 @@ else
 
     private void Logout()
     {
+        try
+        {
+            JSRuntime.InvokeVoidAsync("inactivityTracker.stop");
+        }
+        catch { }
         AppState.Logout();
         NavigationManager.NavigateTo("/");
     }

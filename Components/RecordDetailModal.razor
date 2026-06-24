@@ -143,16 +143,231 @@
                     </div>
                 </div>
             }
+            else if (Table == "audit" && Record is auditlogs aud)
+            {
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Target Record ID</span>
+                            <strong class="text-sm font-mono font-bold text-indigo-900">@aud.recordId</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Module Name</span>
+                            <strong class="text-sm text-slate-800 font-semibold">@aud.module</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Action Code</span>
+                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold @(aud.action == "Create" || aud.action == "CREATE" ? "bg-emerald-50 text-emerald-700" : aud.action == "Update" || aud.action == "UPDATE" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
+                                @aud.action.ToUpper()
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">User (Initials)</span>
+                            <strong class="text-sm text-indigo-700 font-bold">@aud.userInitials</strong>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Timestamp</span>
+                            <strong class="text-sm text-slate-800">@aud.timestamp.ToString("g")</strong>
+                        </div>
+                        <div class="col-span-2 md:col-span-3">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">Reason for Activity</span>
+                            <strong class="text-xs text-slate-700 font-medium italic block mt-0.5">@(string.IsNullOrWhiteSpace(aud.reason) ? "No reason specified" : aud.reason)</strong>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                            <svg class="w-4 h-4 text-indigo-600 font-bold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Field Level Diff &amp; Changes
+                        </h4>
+                        
+                        @{
+                            var changes = GetFieldChanges(aud);
+                            if (changes.Count == 0)
+                            {
+                                <div class="p-4 bg-slate-50 text-slate-400 rounded-xl border border-slate-100 text-xs italic text-center">
+                                    No key-value differences or nested changes recorded in this audit log.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="overflow-hidden border border-slate-200 rounded-xl">
+                                    <table class="min-w-full divide-y divide-slate-200">
+                                        <thead class="bg-slate-50">
+                                            <tr>
+                                                <th scope="col" class="px-4 py-2 text-left text-[9px] font-bold text-slate-500 uppercase tracking-wider">Field Name</th>
+                                                @if (aud.action == "CREATE" || aud.action == "Create")
+                                                {
+                                                    <th scope="col" class="px-4 py-2 text-left text-[9px] font-bold text-slate-500 uppercase tracking-wider">Value Added</th>
+                                                }
+                                                else if (aud.action == "DELETE" || aud.action == "Delete")
+                                                {
+                                                    <th scope="col" class="px-4 py-2 text-left text-[9px] font-bold text-slate-500 uppercase tracking-wider">Value Deleted</th>
+                                                }
+                                                else
+                                                {
+                                                    <th scope="col" class="px-4 py-2 text-left text-[9px] font-bold text-slate-500 uppercase tracking-wider">Original Value</th>
+                                                    <th scope="col" class="px-4 py-2 text-left text-[9px] font-bold text-slate-500 uppercase tracking-wider">New Value</th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-slate-100 font-mono text-[10px]">
+                                            @foreach (var c in changes)
+                                            {
+                                                <tr class="@(c.ChangeType == "Added" ? "bg-emerald-50/20" : c.ChangeType == "Removed" ? "bg-rose-50/20" : "bg-amber-50/20")">
+                                                    <td class="px-4 py-2 font-bold text-slate-700 select-all truncate max-w-[150px]">@c.FieldName</td>
+                                                    
+                                                    @if (aud.action == "CREATE" || aud.action == "Create")
+                                                    {
+                                                        <td class="px-4 py-2 text-slate-900 break-all">@c.NewValue</td>
+                                                    }
+                                                    else if (aud.action == "DELETE" || aud.action == "Delete")
+                                                    {
+                                                        <td class="px-4 py-2 text-rose-800 break-all">@c.OldValue</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td class="px-4 py-2 text-slate-500 line-through break-all">@c.OldValue</td>
+                                                        <td class="px-4 py-2 text-slate-900 font-bold break-all flex items-center gap-1.5">
+                                                            <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                            </svg>
+                                                            <span>@c.NewValue</span>
+                                                        </td>
+                                                    }
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (Table != "audit")
+            {
+                var history = GetRecordHistory();
+                @if (history != null && history.Any())
+                {
+                    <div class="mt-8 border-t border-slate-200 pt-6 space-y-4">
+                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
+                            <svg class="w-4.5 h-4.5 text-indigo-600 font-bold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Form Revision History &amp; Audit Trail (@history.Count entries)
+                        </h4>
+
+                        <div class="relative pl-6 border-l-2 border-slate-100 space-y-6">
+                            @foreach (var log in history)
+                            {
+                                <div class="relative">
+                                    <!-- Timeline Dot -->
+                                    <span class="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full border-2 bg-white @(log.action == "Create" || log.action == "CREATE" ? "border-emerald-500 bg-emerald-500" : log.action == "Update" || log.action == "UPDATE" ? "border-amber-500 bg-amber-500" : "border-rose-500 bg-rose-500")"></span>
+                                    
+                                    <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3 shadow-xs">
+                                        <div class="flex flex-wrap justify-between items-center gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(log.action == "Create" || log.action == "CREATE" ? "bg-emerald-50 text-emerald-700" : log.action == "Update" || log.action == "UPDATE" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
+                                                    @log.action.ToUpper()
+                                                </span>
+                                                <span class="text-[10px] text-slate-500 font-medium">@log.timestamp.ToString("g")</span>
+                                            </div>
+                                            <div class="text-[10px] font-mono text-slate-500">
+                                                By: <span class="font-bold text-indigo-700">@log.userInitials</span>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(log.reason))
+                                        {
+                                            <p class="text-[11px] text-slate-500 italic font-sans leading-relaxed">
+                                                Reason: "@log.reason"
+                                            </p>
+                                        }
+
+                                        <!-- Changed Fields in this revision -->
+                                        @{
+                                            var changes = GetFieldChanges(log);
+                                            if (changes.Count > 0)
+                                            {
+                                                <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                                                    <table class="min-w-full divide-y divide-slate-100">
+                                                        <thead class="bg-slate-50">
+                                                            <tr>
+                                                                <th scope="col" class="px-3 py-1.5 text-left text-[8px] font-bold text-slate-400 uppercase">Field</th>
+                                                                @if (log.action == "CREATE" || log.action == "Create")
+                                                                {
+                                                                    <th scope="col" class="px-3 py-1.5 text-left text-[8px] font-bold text-slate-400 uppercase">Set Value</th>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <th scope="col" class="px-3 py-1.5 text-left text-[8px] font-bold text-slate-400 uppercase">From</th>
+                                                                    <th scope="col" class="px-3 py-1.5 text-left text-[8px] font-bold text-slate-400 uppercase">To</th>
+                                                                }
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-slate-100 font-mono text-[9px] text-slate-700">
+                                                            @foreach (var c in changes)
+                                                            {
+                                                                <tr class="@(c.ChangeType == "Added" ? "bg-emerald-50/10" : c.ChangeType == "Removed" ? "bg-rose-50/10" : "bg-amber-50/10")">
+                                                                    <td class="px-3 py-1 font-bold text-slate-600 max-w-[150px] truncate">@c.FieldName</td>
+                                                                    @if (log.action == "CREATE" || log.action == "Create")
+                                                                    {
+                                                                        <td class="px-3 py-1 break-all">@c.NewValue</td>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <td class="px-3 py-1 text-slate-400 line-through break-all">@c.OldValue</td>
+                                                                        <td class="px-3 py-1 font-semibold text-slate-900 break-all">@c.NewValue</td>
+                                                                    }
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-[9px] text-slate-400 italic">No field-level changes captured for this entry.</p>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-8 border-t border-slate-150 pt-4 text-center">
+                        <p class="text-xs text-slate-400 italic">No audit trail history found for this CRF sheet.</p>
+                    </div>
+                }
+            }
         </div>
 
         <div class="px-6 py-4.5 bg-slate-50 border-t border-slate-100 flex flex-wrap justify-between items-center text-[10px] text-slate-400 font-mono">
-            <span>Logged by Initials: <strong class="text-slate-700">@GetSubmittedBy()</strong></span>
-            <span>Interview Timestamp: <strong class="text-slate-700">@GetSubmittedAt()</strong></span>
+            @if (Table == "audit" && Record is auditlogs a)
+            {
+                <span>Audit Action: <strong class="text-indigo-700 font-bold">@a.action.ToUpper()</strong></span>
+                <span>Logged at: <strong class="text-slate-700">@a.timestamp.ToString("g")</strong></span>
+            }
+            else
+            {
+                <span>Logged by Initials: <strong class="text-slate-700">@GetSubmittedBy()</strong></span>
+                <span>Interview Timestamp: <strong class="text-slate-700">@GetSubmittedAt()</strong></span>
+            }
         </div>
     </div>
 </div>
 
 @code {
+    [CascadingParameter(Name = "DatabaseState")]
+    public DatabaseState Db { get; set; } = default!;
+
     [Parameter]
     public string Table { get; set; } = string.Empty;
 
@@ -162,6 +377,124 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    public class FieldChange
+    {
+        public string FieldName { get; set; } = string.Empty;
+        public string OldValue { get; set; } = string.Empty;
+        public string NewValue { get; set; } = string.Empty;
+        public string ChangeType { get; set; } = string.Empty; // "Added", "Modified", "Removed"
+    }
+
+    private List<FieldChange> GetFieldChanges(auditlogs aud)
+    {
+        var changes = new List<FieldChange>();
+        var oldDict = aud.oldValue ?? new Dictionary<string, object>();
+        var newDict = aud.newValue ?? new Dictionary<string, object>();
+
+        var allKeys = oldDict.Keys.Union(newDict.Keys).OrderBy(k => k).ToList();
+
+        foreach (var key in allKeys)
+        {
+            if (key == "_id" || key == "id" || key == "__v" || key == "Id") continue;
+
+            bool hasOld = oldDict.TryGetValue(key, out var oldVal);
+            bool hasNew = newDict.TryGetValue(key, out var newVal);
+
+            string oldStr = FormatValue(oldVal);
+            string newStr = FormatValue(newVal);
+
+            if (hasOld && hasNew)
+            {
+                if (oldStr != newStr)
+                {
+                    changes.Add(new FieldChange
+                    {
+                        FieldName = key,
+                        OldValue = oldStr,
+                        NewValue = newStr,
+                        ChangeType = "Modified"
+                    });
+                }
+            }
+            else if (hasNew)
+            {
+                changes.Add(new FieldChange
+                {
+                    FieldName = key,
+                    OldValue = "-",
+                    NewValue = newStr,
+                    ChangeType = "Added"
+                });
+            }
+            else if (hasOld)
+            {
+                changes.Add(new FieldChange
+                {
+                    FieldName = key,
+                    OldValue = oldStr,
+                    NewValue = "-",
+                    ChangeType = "Removed"
+                });
+            }
+        }
+
+        return changes;
+    }
+
+    private string FormatValue(object? val)
+    {
+        if (val == null) return "-";
+        
+        if (val is System.Text.Json.JsonElement el)
+        {
+            switch (el.ValueKind)
+            {
+                case System.Text.Json.JsonValueKind.String:
+                    return el.GetString() ?? "-";
+                case System.Text.Json.JsonValueKind.Number:
+                    return el.GetRawText();
+                case System.Text.Json.JsonValueKind.True:
+                    return "Yes";
+                case System.Text.Json.JsonValueKind.False:
+                    return "No";
+                case System.Text.Json.JsonValueKind.Null:
+                    return "-";
+                case System.Text.Json.JsonValueKind.Object:
+                case System.Text.Json.JsonValueKind.Array:
+                    return el.GetRawText();
+                default:
+                    return el.ToString() ?? "-";
+            }
+        }
+        
+        return val.ToString() ?? "-";
+    }
+
+    private List<auditlogs> GetRecordHistory()
+    {
+        if (Db == null || string.IsNullOrEmpty(Table)) return new List<auditlogs>();
+
+        string moduleName = Table switch
+        {
+            "screening" => "Screening Form",
+            "enrolment" => "Enrollment Form",
+            "anc" => "ANC Visit",
+            "delivery" => "Delivery Form",
+            "closeout" => "Closeout Form",
+            _ => ""
+        };
+
+        if (string.IsNullOrEmpty(moduleName)) return new List<auditlogs>();
+
+        var recordId = GetRecordId();
+
+        return Db.AuditLogs
+            .Where(l => string.Equals(l.recordId, recordId, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(l.module, moduleName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(l => l.timestamp)
+            .ToList();
+    }
+
     private string GetRecordId()
     {
         if (Record is screeningforms scr) return scr.screeningId ?? "N/A";
@@ -169,18 +502,21 @@
         if (Record is deliveryforms del) return del.deliveryScreeningId ?? "N/A";
         if (Record is closeoutforms clo) return clo.sreeningId ?? "N/A";
         if (Record is ancvisits anc) return anc.visitNumber ?? "N/A";
+        if (Record is auditlogs aud) return aud.recordId ?? "N/A";
         return "";
     }
 
     private string GetSubmittedBy()
     {
         if (Record is closeoutforms clo) return clo.submittedBy ?? "N/A";
+        if (Record is auditlogs aud) return aud.userInitials ?? "N/A";
         return "N/A";
     }
 
     private string GetSubmittedAt()
     {
         if (Record is closeoutforms clo) return clo.submittedAt.ToString("g") ?? "N/A";
+        if (Record is auditlogs aud) return aud.timestamp.ToString("g") ?? "N/A";
         return "N/A";
     }
 }
