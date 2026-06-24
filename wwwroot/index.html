@@ -44,20 +44,20 @@
             timeoutMs: 0,
             events: ['mousemove', 'mousedown', 'click', 'keypress', 'scroll', 'touchstart'],
             resetTimer: function () {
-                if (this.timer) {
-                    clearTimeout(this.timer);
+                if (window.inactivityTracker.timer) {
+                    clearTimeout(window.inactivityTracker.timer);
                 }
-                if (this.dotNetRef) {
-                    this.timer = setTimeout(() => {
-                        this.dotNetRef.invokeMethodAsync('OnSessionTimeout')
+                if (window.inactivityTracker.dotNetRef) {
+                    window.inactivityTracker.timer = setTimeout(() => {
+                        window.inactivityTracker.dotNetRef.invokeMethodAsync('OnSessionTimeout')
                             .catch(err => console.error("Error invoking OnSessionTimeout", err));
-                    }, this.timeoutMs);
+                    }, window.inactivityTracker.timeoutMs);
                 }
             },
             start: function (dotNetRef, timeoutMs) {
+                this.stop();
                 this.dotNetRef = dotNetRef;
                 this.timeoutMs = timeoutMs;
-                this.resetTimer = this.resetTimer.bind(this);
                 
                 this.events.forEach(event => {
                     window.addEventListener(event, this.resetTimer, { passive: true });

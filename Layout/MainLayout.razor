@@ -163,7 +163,7 @@ else
         catch { }
         
         AppState.Logout();
-        NavigationManager.NavigateTo("/login?reason=inactivity");
+        NavigationManager.NavigateTo("/?reason=inactivity");
     }
 
     public void Dispose()
