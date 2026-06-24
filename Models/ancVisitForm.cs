@@ -22,7 +22,7 @@ namespace BlazorFrontend.Models
         public DateTime visitDate { get; set; } = DateTime.Today;
 
         [JsonPropertyName("gestationAge")]
-        public GestationAgeInfo? gestationAge { get; set; }
+        public GestationAgeInfo gestationAge { get; set; }
 
         [JsonPropertyName("weightKilos")]
         public int? weightKilos { get; set; }
@@ -49,9 +49,9 @@ namespace BlazorFrontend.Models
     public class GestationAgeInfo
     {
         [JsonPropertyName("gestWeeks")]
-        public int? gestWeeks { get; set; }
+        public int gestWeeks { get; set; }
 
         [JsonPropertyName("gestDays")]
-        public int? gestDays { get; set; }
+        public int gestDays { get; set; }
     }
 }

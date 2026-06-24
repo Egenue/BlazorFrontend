@@ -281,12 +281,19 @@
                 incompleteReason = participantStatus != "Completed study visits" ? new IncompleteReason
                 {
                     incompletionOptions = discontinuationReason,
-                    adverseEvent = discontinuationReason == "Adverse event" ? discontinuationReasonDetail : null,
+                    adverseEvent = discontinuationReason == "Adverse event" ? discontinuationReasonDetail : "",
                     deathOption = deathDate,
-                    protocolDeviation = discontinuationReason == "Protocol deviation" ? discontinuationReasonDetail : null,
-                    withdrawalReason = discontinuationReason == "Withdrawal by participant" ? discontinuationReasonDetail : null,
-                    otherReason = discontinuationReason == "Other" ? discontinuationReasonDetail : null
-                } : null
+                    protocolDeviation = discontinuationReason == "Protocol deviation" ? discontinuationReasonDetail : "",
+                    withdrawalReason = discontinuationReason == "Withdrawal by participant" ? discontinuationReasonDetail : "",
+                    otherReason = discontinuationReason == "Other" ? discontinuationReasonDetail : ""
+                } : new IncompleteReason
+                {
+                    incompletionOptions = "",
+                    adverseEvent = "",
+                    protocolDeviation = "",
+                    withdrawalReason = "",
+                    otherReason = ""
+                }
             }
         };
 

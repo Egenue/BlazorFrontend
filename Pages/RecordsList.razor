@@ -221,7 +221,7 @@
                                     else if (activeTable == "anc" && record is ancvisits anc)
                                     {
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(anc.visitDate)</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(anc.gestationAge?.gestWeeks)w</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-mono">@(anc.gestationAge.gestWeeks)w</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@anc.weightKilos</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-semibold text-rose-700">@(anc.bloodPressure?.systolic)/@(anc.bloodPressure?.diastolic)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatDateUtil(anc.nextAppointment)</td>
@@ -229,7 +229,7 @@
                                     else if (activeTable == "delivery" && record is deliveryforms del)
                                     {
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(del.deliveryHistory.deliveryDate)</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@del.deliveryHistory?.deliveryPlace?.deliveryChoices</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@del.deliveryHistory.deliveryPlace.deliveryChoices</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@(del.bodyMassIndex?.value?.ToString("F1") ?? "-")</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>

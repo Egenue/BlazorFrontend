@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using BlazorFrontend.Models;
 
 namespace BlazorFrontend.Services
@@ -15,15 +16,23 @@ namespace BlazorFrontend.Services
         // Screening
         public async Task<List<screeningforms>> GetAllScreeningForms()
         {
-            var response = await _http.GetAsync("getScreeninForms");
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            try
             {
-                return new List<screeningforms>(); // Return empty list instead of crashing
-            }else
+                var response = await _http.GetAsync("getScreeninForms");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<screeningforms>(); // Return empty list instead of crashing
+                }
+                else
+                {
+                    response.EnsureSuccessStatusCode();
+                    var wrapper = await response.Content.ReadFromJsonAsync<ScreeningFormsResponse>();
+                    return wrapper?.screeningDocs ?? new List<screeningforms>();
+                }
+            }
+            catch
             {
-                response.EnsureSuccessStatusCode();
-                var result  = await response.Content.ReadFromJsonAsync<List<screeningforms>>();
-                return result;
+                return new List<screeningforms>();
             }
         }
 
@@ -79,7 +88,7 @@ namespace BlazorFrontend.Services
 
         public async Task DeleteEnrollmentForm(string id, string userInitials, string reason)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteEnrollment/{id}")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"deleteOne/{id}")
             {
                 Content = JsonContent.Create(new { userInitials, reason })
             };
@@ -101,8 +110,9 @@ namespace BlazorFrontend.Services
                     return await response.Content.ReadFromJsonAsync<List<deliveryforms>>() ?? new List<deliveryforms>();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[ApiClient] GetAllDeliveryForms error: {ex}");
                 return new List<deliveryforms>();
             }
         }
@@ -277,6 +287,12 @@ namespace BlazorFrontend.Services
     public class UserData
     {
         public string userRole { get; set; } = string.Empty;
+    }
+
+    public class ScreeningFormsResponse
+    {
+        [JsonPropertyName("screeningDocs")]
+        public List<screeningforms>? screeningDocs { get; set; }
     }
     
     public class DatabaseState

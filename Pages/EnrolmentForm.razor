@@ -460,7 +460,7 @@
                 bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 }
             },
             estGestAge = 0, // Should be calculated or carried over
-            gaParameters = null, // To be populated properly
+            gaParameters = new GaParams(), // To be populated properly
             submittedAt = ExistingRecord?.submittedAt ?? DateTime.Now,
             createdAt = ExistingRecord?.createdAt ?? DateTime.Now,
             updatedAt = DateTime.Now

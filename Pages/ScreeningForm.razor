@@ -282,7 +282,7 @@
     public DatabaseState Db { get; set; } = default!;
 
     [Parameter]
-    public screeningforms? ExistingRecord { get; set; }
+    public screeningforms ExistingRecord { get; set; }
 
     private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
 
@@ -567,7 +567,7 @@
                 bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys , diastolic = bloodPressureDia }
             },
             lastMenstrualPeriod = new LmpInfo { date = DateTime.Now, unknown = true },
-            fundalHeight = 0,
+            fundalHeight = 0.1,
             inclusionCriteria = new InclusionCriteria
             {
                 residentWithin15km = incVillage15km == true ? "Yes" : "No",

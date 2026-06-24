@@ -15,7 +15,7 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("interviewDate")]
-        public DateTime interviewDate { get; set; } = DateTime.Now;
+        public DateTime? interviewDate { get; set; } = DateTime.Now;
 
         [JsonPropertyName("deliveryScreeningId")]
         public required string deliveryScreeningId { get; set; }
@@ -30,7 +30,7 @@ namespace BlazorFrontend.Models
         public MotherAbnomarlity? motherAbnormality { get; set; }
 
         [JsonPropertyName("deliveryHistory")]
-        public required DeliveryHistory deliveryHistory { get; set; }
+        public DeliveryHistory deliveryHistory { get; set; }
 
         [JsonPropertyName("closeOut")]
         public closeoutforms? closeOut { get; set; }
@@ -60,16 +60,16 @@ namespace BlazorFrontend.Models
         public DateTime deliveryDate { get; set; }
 
         [JsonPropertyName("deliveryTime")]
-        public string? deliveryTime { get; set; } = string.Empty;
+        public string deliveryTime { get; set; } = string.Empty;
 
         [JsonPropertyName("deliveryPlace")]
-        public DeliveryPlace? deliveryPlace { get; set; }
+        public DeliveryPlace deliveryPlace { get; set; }
 
         [JsonPropertyName("deliveryPersonnel")]
-        public DeliveryPersonnel? deliveryPersonnel { get; set; }
+        public DeliveryPersonnel deliveryPersonnel { get; set; }
 
         [JsonPropertyName("deliveryMode")]
-        public DeliveryMode? deliveryMode{ get; set; }
+        public DeliveryMode deliveryMode{ get; set; }
     }
 
     public class DeliveryPersonnel
