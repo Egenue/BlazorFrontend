@@ -42,7 +42,7 @@ namespace BlazorFrontend.Models
         public required VitalSignsInfo vitalSigns { get; set; }
 
         [JsonPropertyName("lastMenstrualPeriod")]
-        public LmpInfo? lastMenstrualPeriod { get; set; }
+        public LmpInfo lastMenstrualPeriod { get; set; }
 
         [JsonPropertyName("fundalHeight")]
         public double fundalHeight { get; set; }
@@ -66,49 +66,49 @@ namespace BlazorFrontend.Models
     public class Eligibility
     {
         [JsonPropertyName("meetsAllCriteria")]
-        public required string meetsAllCriteria { get; set; }
+        public string? meetsAllCriteria { get; set; }
 
         [JsonPropertyName("consentedToParticipate")]
-        public required string consentedToParticipate { get; set; }
+        public string? consentedToParticipate { get; set; }
 
         [JsonPropertyName("reasonForRefusal")]
-        public required string reasonForRefusal { get; set; }
+        public string? reasonForRefusal { get; set; }
     }
 
     public class ExclusionCrit
     {
         [JsonPropertyName("multiplePregancy")]
-        public required string multiplePregancy { get; set; }
+        public string? multiplePregancy { get; set; }
 
         [JsonPropertyName("fisturaRepairOrSpinalDeformity")]
-        public required string fisturaRepairOrSpinalDeformity { get; set; }
+        public string? fisturaRepairOrSpinalDeformity { get; set; }
 
         [JsonPropertyName("unableToGiveInformedConsent")]
-        public required string unableToGiveInformedConsent { get; set; }
+        public string? unableToGiveInformedConsent { get; set; }
     }
 
     public class InclusionCriteria
     {
         [JsonPropertyName("residentWithin15km")]
-        public required string residentWithin15km { get; set; }
+        public string? residentWithin15km { get; set; }
 
         [JsonPropertyName("pregnancyConfirmed")]
-        public required string pregnancyConfirmed { get; set; }
+        public string? pregnancyConfirmed { get; set; }
 
         [JsonPropertyName("gestationLessThan31Weeks")]
-        public required string gestationLessThan31Weeks { get; set; }
+        public string? gestationLessThan31Weeks { get; set; }
 
         [JsonPropertyName("consentsToHIVTesting")]
-        public required string consentsToHIVTesting { get; set; }
+        public string? consentsToHIVTesting { get; set; }
 
         [JsonPropertyName("willingToDeliverAtStudyHospital")]
-        public required string willingToDeliverAtStudyHospital { get; set; }
+        public string? willingToDeliverAtStudyHospital { get; set; }
     }
 
     public class LmpInfo
     {
         [JsonPropertyName("date")]
-        public DateTime? date { get; set; }
+        public DateTime? date { get; set; } = new DateTime(1990, 1, 1);
 
         [JsonPropertyName("unknown")]
         public bool? unknown { get; set; }
@@ -117,42 +117,42 @@ namespace BlazorFrontend.Models
     public class VitalSignsInfo
     {
         [JsonPropertyName("temperature")]
-        public required TempInfo temperature { get; set; }
+        public TempInfo? temperature { get; set; }
 
         [JsonPropertyName("respiratoryRate")]
-        public int respiratoryRate { get; set; }
+        public int? respiratoryRate { get; set; }
 
         [JsonPropertyName("pulseRate")]
-        public int pulseRate { get; set; }
+        public int? pulseRate { get; set; }
 
         [JsonPropertyName("bloodPressure")]
-        public required BloodPressureInfo bloodPressure { get; set; }
+        public BloodPressureInfo? bloodPressure { get; set; }
     }
 
     public class BloodPressureInfo
     {
         [JsonPropertyName("systolic")]
-        public int systolic { get; set; }
+        public int? systolic { get; set; }
 
         [JsonPropertyName("diastolic")]
-        public int diastolic { get; set; }
+        public int? diastolic { get; set; }
     }
 
     public class TempInfo
     {
         [JsonPropertyName("value")]
-        public double value { get; set; }
+        public double? value { get; set; }
 
         [JsonPropertyName("location")]
-        public required string location { get; set; }
+        public string? location { get; set; }
     }
 
     public class AgeInfo
     {
         [JsonPropertyName("years")]
-        public int years {get; set;}
+        public int? years {get; set;}
 
         [JsonPropertyName("months")]
-        public int months { get; set; }
+        public int? months { get; set; }
     }
 }

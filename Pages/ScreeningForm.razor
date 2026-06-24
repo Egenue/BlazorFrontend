@@ -123,6 +123,21 @@
                         </div>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                        LMP Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" required disabled="@ReadOnly" @bind="lmpDate" class="block w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs" />
+                </div>
+                <div>
+                    <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                        LMP Certainty <span class="text-red-500">*</span>
+                    </label>
+                    <select @bind="lmpUnknown" disabled="@ReadOnly" class="block px-3 py-1 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm">
+                        <option value=false>Certain</option>
+                        <option value=true>Uncertain</option>
+                    </select>
+                </div>
             </div>
             
             <VitalAlerts Results="@(new List<ValidationResult?> { bpStatus, tempStatus, rrStatus, prStatus, heightStatus, bmiStatus })" />
@@ -339,14 +354,15 @@
     }
 
     private double BMI;
-
-    private double temperatureC;
+    private double? temperatureC;
     private string tempMethod = "Oral";
-    private int respiratoryRate;
-    private int pulseRate;
-    private int bloodPressureSys;
-    private int bloodPressureDia;
-
+    private int? respiratoryRate;
+    private int? pulseRate;
+    private int? bloodPressureSys;
+    private int? bloodPressureDia;
+    private int fundalHeight;
+    private DateTime? lmpDate = DateTime.Now;
+    private bool? lmpUnknown;
     private bool? _incVillage15km = null;
     private bool? incVillage15km
     {
@@ -435,6 +451,8 @@
             pulseRate = ExistingRecord.vitalSigns.pulseRate;
             bloodPressureSys = ExistingRecord.vitalSigns.bloodPressure.systolic;
             bloodPressureDia = ExistingRecord.vitalSigns.bloodPressure.diastolic;
+            lmpDate = ExistingRecord.lastMenstrualPeriod.date;
+            lmpUnknown = ExistingRecord.lastMenstrualPeriod?.unknown;
             _incVillage15km = ExistingRecord.inclusionCriteria?.residentWithin15km == "Yes";
             _incPregnancyConfirmed = ExistingRecord.inclusionCriteria?.pregnancyConfirmed == "Yes";
             _incGestation31wks = ExistingRecord.inclusionCriteria?.gestationLessThan31Weeks == "Yes";
@@ -600,7 +618,7 @@
         {
             await ApiClient.CreateScreeningForm(record, AppState.CurrentUser?.Initials ?? "SYS");
         }
-        
+
         NavigationManager.NavigateTo("/records");
     }
 

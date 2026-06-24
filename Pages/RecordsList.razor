@@ -137,6 +137,7 @@
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wt</th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BP</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Next</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
                                 <th scope="col" class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         }
@@ -208,7 +209,14 @@
                                                 @(scr.eligibility?.meetsAllCriteria == "Yes" ? "OK" : "Fail")
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        @if (string.IsNullOrEmpty(GetRecordSubmitter(scr)))
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetRecordSubmitter(scr)</td>
+                                        }
                                     }
                                     else if (activeTable == "enrolment" && record is enrollmentforms enr)
                                     {
@@ -216,7 +224,14 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold text-slate-600 truncate max-w-[80px]">@enr.villageOfResidence</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@GetEnrolmentBMI(enr)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[80px]">@enr.educationLevel</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        @if (string.IsNullOrEmpty(GetRecordSubmitter(enr)))
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetRecordSubmitter(enr)</td>
+                                        }
                                     }
                                     else if (activeTable == "anc" && record is ancvisits anc)
                                     {
@@ -225,6 +240,14 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@anc.weightKilos</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-semibold text-rose-700">@(anc.bloodPressure?.systolic)/@(anc.bloodPressure?.diastolic)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatDateUtil(anc.nextAppointment)</td>
+                                        @if (string.IsNullOrEmpty(GetRecordSubmitter(anc)))
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetRecordSubmitter(anc)</td>
+                                        }
                                     }
                                     else if (activeTable == "delivery" && record is deliveryforms del)
                                     {
@@ -232,14 +255,28 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold">@del.deliveryHistory.deliveryPlace.deliveryChoices</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-center font-bold text-slate-600">@(del.bodyMassIndex?.value?.ToString("F1") ?? "-")</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        @if (string.IsNullOrEmpty(GetRecordSubmitter(del)))
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetRecordSubmitter(del)</td>
+                                        }
                                     }
                                     else if (activeTable == "closeout" && record is closeoutforms clo)
                                     {
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@DateUtils.FormatDateUtil(clo.dateOfTermination)</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-semibold text-slate-600 truncate max-w-[120px]">@clo.participantStatus?.choicesStudy</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-rose-700 font-bold truncate max-w-[100px]">@(clo.participantStatus?.incompleteReason?.incompletionOptions ?? "Graduated")</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        @if (string.IsNullOrEmpty(GetRecordSubmitter(clo)))
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetRecordSubmitter(clo)</td>
+                                        }
                                     }
 
                                     <td class="px-4 py-3 whitespace-nowrap text-right text-[10px] font-medium space-x-1">
@@ -352,8 +389,52 @@
 
     private string GetRecordSubmitter(object record)
     {
-        if (record is closeoutforms clo) return clo.submittedBy ?? "";
         if (record is auditlogs aud) return aud.userInitials;
+
+        string moduleName = "";
+        string recordId = "";
+
+        if (record is screeningforms scr)
+        {
+            moduleName = "Screening Form";
+            recordId = scr.screeningId;
+        }
+        else if (record is enrollmentforms enr)
+        {
+            moduleName = "Enrollment Form";
+            recordId = enr.screeningId;
+        }
+        else if (record is ancvisits anc)
+        {
+            moduleName = "ANC Visit";
+            recordId = anc.visitNumber;
+        }
+        else if (record is deliveryforms del)
+        {
+            moduleName = "Delivery Form";
+            recordId = del.deliveryScreeningId;
+        }
+        else if (record is closeoutforms clo)
+        {
+            moduleName = "Closeout Form";
+            recordId = clo.sreeningId;
+        }
+
+        if (!string.IsNullOrEmpty(moduleName) && !string.IsNullOrEmpty(recordId))
+        {
+            var log = Db.AuditLogs.FirstOrDefault(l =>
+                string.Equals(l.recordId, recordId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(l.module, moduleName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(l.action, "CREATE", StringComparison.OrdinalIgnoreCase));
+            
+            if (log != null)
+            {
+                return log.userInitials;
+            }
+        }
+
+        if (record is closeoutforms c) return c.submittedBy ?? "";
+
         return "";
     }
 
