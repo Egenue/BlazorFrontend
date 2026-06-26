@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GAIA Gestational Age Calculator &amp; Decision Tool</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
+    <div class="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
+            <!-- Header -->
+            <header class="bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-850 px-8 py-6 text-white relative">
+                <div class="flex justify-between items-center mb-1">
+                    <h1 class="text-2xl font-black tracking-tight">GAIA GA Calculator</h1>
+                    <span id="badge" class="text-[10px] font-black text-indigo-300 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">
+                        Standalone Webapp
+                    </span>
+                </div>
+                <p class="text-indigo-200 text-xs font-bold uppercase tracking-widest opacity-80">Gestational Age &amp; Clinical Decision Tool</p>
+            </header>
+
+            <div class="p-6 sm:p-8 space-y-6 flex-1">
+                <!-- Notifications -->
+                <div id="error-alert" class="hidden p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-700 text-sm font-semibold animate-in fade-in">
+                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="error-message"></span>
+                </div>
+
+                <div id="status-alert" class="hidden p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-in fade-in">
+                    <svg id="status-icon" class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"></svg>
+                    <span id="status-message"></span>
+                </div>
+
+                <!-- Parameters Form -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Assessment Type</label>
+                            <select id="mode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer">
+                                <option value="screening">Screening / Enrolment</option>
+                                <option value="delivery">Delivery</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Sync Participant</label>
+                            <div class="space-y-2">
+                                <input type="text" id="id-search" placeholder="Type to search ID..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                                <select id="participant-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer">
+                                    <option value="">-- Select to Auto-Fill --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Assessment Date</label>
+                                <input type="date" id="enrolment-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                            <div id="delivery-date-container" class="hidden">
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Delivery Date</label>
+                                <input type="date" id="delivery-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Ultrasound Date</label>
+                            <input type="date" id="ultrasound-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">US GA (Weeks)</label>
+                                <input type="number" id="us-weeks" placeholder="e.g. 22" min="0" max="52" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">US GA (Days)</label>
+                                <input type="number" id="us-days" placeholder="0-6" min="0" max="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">Last Menstrual Period</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="date" id="lmp-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500" />
+                                <select id="lmp-certainty" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold cursor-pointer">
+                                    <option value="certain">Certain</option>
+                                    <option value="uncertain">Uncertain</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-calculate" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    CALCULATE GAIA PARAMETERS
+                </button>
+
+                <!-- Calculations Output -->
+                <div id="output-section" class="hidden space-y-4 animate-in fade-in">
+                    <div class="bg-slate-50 rounded-3xl p-6 border-l-8 border-indigo-600 space-y-4 shadow-sm">
+                        <div class="grid grid-cols-2 gap-y-3 gap-x-6">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">Trimester</span>
+                                <p id="out-trimester" class="text-sm font-bold text-slate-800"></p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">LMP Date</span>
+                                <p id="out-lmp" class="text-sm font-bold text-slate-800"></p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">US Pregnancy Start</span>
+                                <p id="out-preg-start-us" class="text-sm font-bold text-slate-800"></p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">US vs LMP Diff</span>
+                                <p id="out-diff" class="text-sm font-bold text-slate-800"></p>
+                            </div>
+                            <div class="col-span-2 border-t border-slate-200 pt-3">
+                                <span class="text-[10px] font-black text-indigo-500 uppercase block">GAIA Pregnancy Start Date</span>
+                                <p id="out-preg-start-gaia" class="text-lg font-black text-slate-900"></p>
+                                <span id="out-source" class="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded mt-1 inline-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-slate-200">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">GA at Enrolment</span>
+                                <p id="out-ga-enrol" class="text-sm font-black text-slate-900"></p>
+                            </div>
+                            <div id="ga-birth-container" class="hidden">
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">GA at Birth</span>
+                                <p id="out-ga-birth" class="text-sm font-black text-slate-900"></p>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-[10px] font-black text-slate-400 uppercase block">Estimated Due Date (EDD)</span>
+                                <p id="out-edd" class="text-sm font-black text-slate-900"></p>
+                            </div>
+                        </div>
+
+                        <div id="loc-banner" class="p-4 rounded-2xl border flex items-center justify-between">
+                            <span class="text-xs font-black text-slate-500 uppercase">LOC Classification</span>
+                            <span id="out-loc" class="text-sm font-black"></span>
+                        </div>
+
+                        <div id="decision-banner" class="p-5 rounded-2xl border-2 border-dashed text-center">
+                            <p id="out-decision" class="text-base font-black"></p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2">
+                        <button id="btn-save-registry" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                            <span id="btn-save-text">SAVE TO CLINICAL REGISTRY</span>
+                        </button>
+
+                        <button id="btn-apply-form" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            <span>APPLY TO ENROLMENT FORM</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-slate-50 px-8 py-4 border-t border-slate-200 text-center text-slate-400 font-black text-[10px] uppercase tracking-widest">
+                &copy; 2026 Maternal Research Unit &bull; GAIA V5.2 Standalone Webapp
+            </footer>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        let apiBaseUrl = "https://kemri-p2.onrender.com/api/";
+        let enrolledList = [];
+        let screeningList = [];
+        let isIframe = false;
+        let calculatedResult = null;
+
+        // Date Utilities
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        function formatDdmMmyyyy(dateInput) {
+            if (!dateInput) return "";
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return dateInput;
+            return `${String(d.getDate()).padStart(2, '0')}/${months[d.getMonth()]}/${d.getFullYear()}`;
+        }
+
+        // Configuration and Startup
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check if loaded inside iframe
+            isIframe = window.self !== window.top || window.location.search.includes('apply=true');
+            if (isIframe) {
+                document.getElementById('badge').innerText = "Enrolment Form Context";
+            }
+
+            // Load Config
+            try {
+                const res = await fetch('/appsettings.json');
+                const config = await res.json();
+                if (config.BaseApiUrl) {
+                    apiBaseUrl = config.BaseApiUrl;
+                }
+            } catch (e) {
+                console.warn("Could not load config file, falling back to default API url.", e);
+            }
+
+            // Set default assessment date
+            document.getElementById('enrolment-date').value = new Date().toISOString().split('T')[0];
+
+            // Fetch data
+            await fetchParticipants();
+
+            // Handle pre-select parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectId = urlParams.get('preselect');
+            if (preselectId) {
+                document.getElementById('id-search').value = preselectId;
+                filterParticipants();
+                document.getElementById('participant-select').value = preselectId;
+                loadSelectedParticipant();
+            }
+        });
+
+        // Search / Dropdown Management
+        async function fetchParticipants() {
+            try {
+                const [enrRes, scrRes] = await Promise.all([
+                    fetch(`${apiBaseUrl}getEnrollment`),
+                    fetch(`${apiBaseUrl}getScreeninForms`)
+                ]);
+
+                if (enrRes.ok) {
+                    enrolledList = await enrRes.json();
+                }
+                if (scrRes.ok) {
+                    const scrData = await scrRes.json();
+                    screeningList = scrData.screeningDocs || [];
+                }
+
+                populateDropdown(enrolledList);
+            } catch (e) {
+                showError("Unable to fetch participant records from server.");
+            }
+        }
+
+        function populateDropdown(list) {
+            const select = document.getElementById('participant-select');
+            select.innerHTML = '<option value="">-- Select to Auto-Fill --</option>';
+            list.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.screeningId;
+                opt.innerText = p.screeningId;
+                select.appendChild(opt);
+            });
+        }
+
+        document.getElementById('id-search').addEventListener('input', filterParticipants);
+
+        function filterParticipants() {
+            const q = document.getElementById('id-search').value.trim().toLowerCase();
+            const list = enrolledList.filter(p => p.screeningId.toLowerCase().includes(q));
+            populateDropdown(list);
+        }
+
+        document.getElementById('participant-select').addEventListener('change', loadSelectedParticipant);
+
+        function loadSelectedParticipant() {
+            const id = document.getElementById('participant-select').value;
+            if (!id) return;
+
+            const p = enrolledList.find(x => x.screeningId === id);
+            const s = screeningList.find(x => x.screeningId === id);
+
+            if (p) {
+                hideError();
+                document.getElementById('ultrasound-date').value = p.gaParameters?.ultrasoundDate ? p.gaParameters.ultrasoundDate.split('T')[0] : "";
+                document.getElementById('us-weeks').value = p.gaParameters?.usWeeks || 0;
+                document.getElementById('us-days').value = p.gaParameters?.usDays || 0;
+                document.getElementById('lmp-date').value = p.gaParameters?.lmpDate ? p.gaParameters.lmpDate.split('T')[0] : "";
+                document.getElementById('lmp-certainty').value = p.gaParameters?.lmpCertainty || "certain";
+                
+                if (p.submittedAt) {
+                    document.getElementById('enrolment-date').value = p.submittedAt.split('T')[0];
+                }
+            } else if (s) {
+                hideError();
+                document.getElementById('ultrasound-date').value = "";
+                document.getElementById('us-weeks').value = 0;
+                document.getElementById('us-days').value = 0;
+                document.getElementById('lmp-date').value = s.lastMenstrualPeriod?.date ? s.lastMenstrualPeriod.date.split('T')[0] : "";
+                document.getElementById('lmp-certainty').value = s.lastMenstrualPeriod?.unknown ? "uncertain" : "certain";
+            }
+        }
+
+        // Assessment Mode Change
+        document.getElementById('mode').addEventListener('change', () => {
+            const mode = document.getElementById('mode').value;
+            const deliveryContainer = document.getElementById('delivery-date-container');
+            if (mode === 'delivery') {
+                deliveryContainer.classList.remove('hidden');
+                document.getElementById('delivery-date').value = new Date().toISOString().split('T')[0];
+            } else {
+                deliveryContainer.classList.add('hidden');
+            }
+            if (calculatedResult) {
+                calculateGAIA();
+            }
+        });
+
+        // Calculation Trigger
+        document.getElementById('btn-calculate').addEventListener('click', calculateGAIA);
+
+        function calculateGAIA() {
+            const mode = document.getElementById('mode').value;
+            const enrolmentDateStr = document.getElementById('enrolment-date').value;
+            const deliveryDateStr = document.getElementById('delivery-date').value;
+            const ultrasoundDateStr = document.getElementById('ultrasound-date').value;
+            const usWeeks = parseInt(document.getElementById('us-weeks').value) || 0;
+            const usDays = parseInt(document.getElementById('us-days').value) || 0;
+            const lmpDateStr = document.getElementById('lmp-date').value;
+            const lmpCertainty = document.getElementById('lmp-certainty').value;
+
+            if (!ultrasoundDateStr) {
+                showError("Please enter a valid Ultrasound Date.");
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const usDate = new Date(ultrasoundDateStr);
+            usDate.setHours(0, 0, 0, 0);
+
+            const enrDate = enrolmentDateStr ? new Date(enrolmentDateStr) : today;
+            enrDate.setHours(0, 0, 0, 0);
+
+            if (usDate > today) {
+                showError("Ultrasound date cannot be in the future.");
+                return;
+            }
+            if (usWeeks < 0 || usWeeks > 42) {
+                showError("Ultrasound weeks must be between 0 and 42.");
+                return;
+            }
+            if (usDays < 0 || usDays > 6) {
+                showError("Ultrasound days must be between 0 and 6.");
+                return;
+            }
+
+            let lmpDate = null;
+            if (lmpDateStr) {
+                lmpDate = new Date(lmpDateStr);
+                lmpDate.setHours(0, 0, 0, 0);
+                if (lmpDate > today) {
+                    showError("LMP date cannot be in the future.");
+                    return;
+                }
+                if (lmpDate > usDate) {
+                    showError("LMP date cannot be after ultrasound date.");
+                    return;
+                }
+            }
+
+            hideError();
+
+            const usGADays = usWeeks * 7 + usDays;
+            const trimester = usGADays <= 97 ? "First" : (usGADays <= 195 ? "Second" : "Third or beyond");
+
+            const pregnancyStartByUS = new Date(usDate.getTime() - usGADays * 24 * 60 * 60 * 1000);
+            let finalPregnancyStartDate = new Date(pregnancyStartByUS);
+            let source = "Ultrasound";
+            let loc = "";
+            let absDiff = null;
+
+            if (lmpDate) {
+                const diffTime = pregnancyStartByUS.getTime() - lmpDate.getTime();
+                absDiff = Math.round(Math.abs(diffTime) / (24 * 60 * 60 * 1000));
+
+                if (trimester === "First") {
+                    loc = "LOC-1";
+                    if (absDiff <= 7 && lmpCertainty === "certain") {
+                        finalPregnancyStartDate = new Date(lmpDate);
+                        source = "LMP";
+                    }
+                } else if (trimester === "Second") {
+                    if (lmpCertainty === "certain") {
+                        loc = "LOC-2a";
+                        if (absDiff <= 14) {
+                            finalPregnancyStartDate = new Date(lmpDate);
+                            source = "LMP";
+                        }
+                    } else {
+                        loc = "LOC-2b";
+                        if (absDiff <= 10) {
+                            finalPregnancyStartDate = new Date(lmpDate);
+                            source = "LMP";
+                        }
+                    }
+                } else {
+                    loc = "NOT LOC 1-2b";
+                }
+            } else {
+                loc = trimester === "First" ? "LOC-1" : (trimester === "Second" ? "LOC-2b" : "NOT LOC 1-2b");
+            }
+
+            const gaAtEnrolmentDays = Math.round((enrDate.getTime() - finalPregnancyStartDate.getTime()) / (24 * 60 * 60 * 1000));
+
+            if (gaAtEnrolmentDays < 0) {
+                showError("Calculated pregnancy start date is after the enrolment date.");
+                return;
+            }
+
+            const edd = new Date(finalPregnancyStartDate.getTime() + 280 * 24 * 60 * 60 * 1000);
+
+            // Decision mapping
+            let decisionText = "";
+            let decisionBg = "";
+            let decisionTextCol = "";
+            let gaBirth = 0;
+
+            if (mode === "screening") {
+                if (loc === "NOT LOC 1-2b") {
+                    decisionText = "SCREEN BUT DO NOT ENROL THIS PARTICIPANT.";
+                    decisionBg = "bg-rose-50 border-rose-200";
+                    decisionTextCol = "text-rose-600";
+                } else if (gaAtEnrolmentDays < 98) {
+                    decisionText = "REFER FOR SCREENING ON A LATER DATE";
+                    decisionBg = "bg-orange-50 border-orange-200";
+                    decisionTextCol = "text-orange-600";
+                } else if (gaAtEnrolmentDays <= 252) {
+                    decisionText = "PROCEED WITH SCREENING / ENROLMENT";
+                    decisionBg = "bg-emerald-50 border-emerald-200";
+                    decisionTextCol = "text-emerald-600";
+                } else {
+                    decisionText = "SCREEN BUT DO NOT ENROL THIS PARTICIPANT.";
+                    decisionBg = "bg-rose-50 border-rose-200";
+                    decisionTextCol = "text-rose-600";
+                }
+            } else {
+                // Delivery
+                if (deliveryDateStr) {
+                    const delDate = new Date(deliveryDateStr);
+                    delDate.setHours(0, 0, 0, 0);
+                    gaBirth = Math.round((delDate.getTime() - finalPregnancyStartDate.getTime()) / (24 * 60 * 60 * 1000));
+                }
+
+                if (gaBirth >= 259) {
+                    decisionText = "TERM";
+                    decisionBg = "bg-emerald-50 border-emerald-200";
+                    decisionTextCol = "text-emerald-600";
+                } else if (gaBirth < 196) {
+                    decisionText = "EXTREMELY PRETERM, COMPLETE SAE";
+                    decisionBg = "bg-rose-50 border-rose-200";
+                    decisionTextCol = "text-rose-600";
+                } else if (gaBirth < 224) {
+                    decisionText = "VERY PRETERM, COMPLETE SAE";
+                    decisionBg = "bg-orange-50 border-orange-200";
+                    decisionTextCol = "text-orange-600";
+                } else {
+                    decisionText = "MODERATE TO LATE PRETERM, COMPLETE SAE";
+                    decisionBg = "bg-amber-50 border-amber-200";
+                    decisionTextCol = "text-amber-600";
+                }
+            }
+
+            calculatedResult = {
+                trimester: trimester + " Trimester",
+                pregnancyStartByUS: pregnancyStartByUS,
+                finalPregnancyStartDate: finalPregnancyStartDate,
+                source: source,
+                loc: loc,
+                absDiff: absDiff,
+                gaAtEnrolmentDays: gaAtEnrolmentDays,
+                edd: edd,
+                gaBirth: gaBirth
+            };
+
+            // Display Results
+            document.getElementById('out-trimester').innerText = calculatedResult.trimester;
+            document.getElementById('out-lmp').innerText = lmpDateStr ? formatDdmMmyyyy(lmpDateStr) : "N/A";
+            document.getElementById('out-preg-start-us').innerText = formatDdmMmyyyy(pregnancyStartByUS);
+            document.getElementById('out-diff').innerText = absDiff !== null ? `${absDiff} days` : "N/A";
+            document.getElementById('out-preg-start-gaia').innerText = formatDdmMmyyyy(finalPregnancyStartDate);
+            document.getElementById('out-source').innerText = "Source: " + source;
+            document.getElementById('out-ga-enrol').innerText = `${Math.floor(gaAtEnrolmentDays / 7)}w ${gaAtEnrolmentDays % 7}d`;
+            document.getElementById('out-edd').innerText = formatDdmMmyyyy(edd);
+
+            const birthContainer = document.getElementById('ga-birth-container');
+            if (mode === 'delivery') {
+                birthContainer.classList.remove('hidden');
+                document.getElementById('out-ga-birth').innerText = `${Math.floor(gaBirth / 7)}w ${gaBirth % 7}d`;
+            } else {
+                birthContainer.classList.add('hidden');
+            }
+
+            // LOC banner formatting
+            const locBanner = document.getElementById('loc-banner');
+            const locVal = document.getElementById('out-loc');
+            locVal.innerText = loc;
+            if (loc.includes('NOT')) {
+                locBanner.className = "p-4 rounded-2xl border bg-rose-50 border-rose-100 flex items-center justify-between text-rose-600 font-bold";
+            } else {
+                locBanner.className = "p-4 rounded-2xl border bg-emerald-50 border-emerald-100 flex items-center justify-between text-emerald-600 font-bold";
+            }
+
+            // Decision banner formatting
+            const decBanner = document.getElementById('decision-banner');
+            const decVal = document.getElementById('out-decision');
+            decVal.innerText = decisionText;
+            decBanner.className = `p-5 rounded-2xl border-2 border-dashed ${decisionBg} ${decisionTextCol} text-center font-bold`;
+
+            document.getElementById('output-section').classList.remove('hidden');
+
+            // Toggle CTA buttons
+            if (isIframe) {
+                document.getElementById('btn-apply-form').classList.remove('hidden');
+                document.getElementById('btn-save-registry').classList.add('hidden');
+            } else {
+                document.getElementById('btn-apply-form').classList.add('hidden');
+                document.getElementById('btn-save-registry').classList.remove('hidden');
+            }
+        }
+
+        // Standalone Save to Registry
+        document.getElementById('btn-save-registry').addEventListener('click', async () => {
+            const selectedParticipantId = document.getElementById('participant-select').value;
+            if (!selectedParticipantId) {
+                showError("Please select a participant to save gestation details.");
+                return;
+            }
+            if (!calculatedResult) return;
+
+            const saveBtnText = document.getElementById('btn-save-text');
+            const saveBtn = document.getElementById('btn-save-registry');
+            saveBtnText.innerText = "SAVING DATA...";
+            saveBtn.disabled = true;
+
+            try {
+                const lmpDateVal = document.getElementById('lmp-date').value;
+                const lmpCertaintyVal = document.getElementById('lmp-certainty').value;
+                const enrolmentDateVal = document.getElementById('enrolment-date').value;
+                const usWeeksVal = parseInt(document.getElementById('us-weeks').value) || 0;
+                const usDaysVal = parseInt(document.getElementById('us-days').value) || 0;
+
+                const gestationPayload = {
+                    screeningId: selectedParticipantId,
+                    lmp: lmpDateVal ? new Date(lmpDateVal).toISOString() : new Date(1990,0,1).toISOString(),
+                    ultrasoundDate: { usWeeks: usWeeksVal, usDays: usDaysVal },
+                    lmpCertainty: lmpCertaintyVal,
+                    enrolmentDate: enrolmentDateVal ? new Date(enrolmentDateVal).toISOString() : new Date().toISOString(),
+                    estDueDate: calculatedResult.edd.toISOString(),
+                    currentGestAge: {
+                        gestweeks: Math.floor(calculatedResult.gaAtEnrolmentDays / 7),
+                        gestdays: calculatedResult.gaAtEnrolmentDays % 7
+                    }
+                };
+
+                // 1. Create or Update Gestation record
+                const checkGestRes = await fetch(`${apiBaseUrl}getGestAge`);
+                let isUpdate = false;
+                if (checkGestRes.ok) {
+                    const gestList = await checkGestRes.json();
+                    if (gestList.some(g => g.screeningId === selectedParticipantId)) {
+                        isUpdate = true;
+                    }
+                }
+
+                let gestSaveRes;
+                if (isUpdate) {
+                    gestSaveRes = await fetch(`${apiBaseUrl}updateGestAge/${selectedParticipantId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            record: gestationPayload,
+                            userInitials: 'SYS',
+                            reason: 'Update via Standalone Calc'
+                        })
+                    });
+                } else {
+                    gestSaveRes = await fetch(`${apiBaseUrl}createGestAge`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            record: gestationPayload,
+                            userInitials: 'SYS'
+                        })
+                    });
+                }
+
+                if (!gestSaveRes.ok) {
+                    throw new Error("Failed to save pregnancy records.");
+                }
+
+                // 2. Sync to Enrollment record if exists
+                const enrRes = await fetch(`${apiBaseUrl}getEnrollment`);
+                if (enrRes.ok) {
+                    const enrolments = await enrRes.json();
+                    const enr = enrolments.find(e => e.screeningId === selectedParticipantId);
+                    if (enr) {
+                        enr.estGestAge = Math.floor(calculatedResult.gaAtEnrolmentDays / 7);
+                        enr.gaParameters = {
+                            ultrasoundDate: document.getElementById('ultrasound-date').value,
+                            usWeeks: usWeeksVal,
+                            usDays: usDaysVal,
+                            lmpDate: lmpDateVal ? new Date(lmpDateVal).toISOString() : null,
+                            lmpCertainty: lmpCertaintyVal,
+                            calculatedTrimester: calculatedResult.trimester,
+                            finalPregnancyStartDate: calculatedResult.finalPregnancyStartDate.toISOString(),
+                            gaAtEnrolmentDays: calculatedResult.gaAtEnrolmentDays,
+                            edd: calculatedResult.edd.toISOString(),
+                            source: calculatedResult.source,
+                            loc: calculatedResult.loc
+                        };
+
+                        await fetch(`${apiBaseUrl}updateEnrollment/${selectedParticipantId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                record: enr,
+                                userInitials: 'SYS',
+                                reason: 'Calc Sync'
+                            })
+                        });
+                    }
+                }
+
+                showStatus("Clinical registry records updated successfully.", "success");
+            } catch (e) {
+                showStatus(e.message || "Failed to persist records to clinical database.", "error");
+            } finally {
+                saveBtnText.innerText = "SAVE TO CLINICAL REGISTRY";
+                saveBtn.disabled = false;
+            }
+        });
+
+        // Parent communication for Iframe mode
+        document.getElementById('btn-apply-form').addEventListener('click', () => {
+            if (!calculatedResult) return;
+
+            const lmpDateVal = document.getElementById('lmp-date').value;
+            const lmpCertaintyVal = document.getElementById('lmp-certainty').value;
+            const ultrasoundDateVal = document.getElementById('ultrasound-date').value;
+            const usWeeksVal = parseInt(document.getElementById('us-weeks').value) || 0;
+            const usDaysVal = parseInt(document.getElementById('us-days').value) || 0;
+
+            const payload = {
+                ultrasoundDate: ultrasoundDateVal || null,
+                usWeeks: usWeeksVal,
+                usDays: usDaysVal,
+                lmpDate: lmpDateVal || null,
+                lmpCertainty: lmpCertaintyVal,
+                calculatedTrimester: calculatedResult.trimester,
+                finalPregnancyStartDate: calculatedResult.finalPregnancyStartDate.toISOString(),
+                gaAtEnrolmentDays: calculatedResult.gaAtEnrolmentDays,
+                edd: calculatedResult.edd.toISOString(),
+                source: calculatedResult.source,
+                loc: calculatedResult.loc
+            };
+
+            window.parent.postMessage({
+                type: 'gaia_apply',
+                data: payload
+            }, '*');
+        });
+
+        // Helper Alert Messages
+        function showError(msg) {
+            document.getElementById('error-message').innerText = msg;
+            document.getElementById('error-alert').classList.remove('hidden');
+            document.getElementById('status-alert').classList.add('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error-alert').classList.add('hidden');
+        }
+
+        function showStatus(msg, type) {
+            const alert = document.getElementById('status-alert');
+            const icon = document.getElementById('status-icon');
+            const text = document.getElementById('status-message');
+
+            text.innerText = msg;
+            alert.classList.remove('hidden');
+            hideError();
+
+            if (type === 'success') {
+                alert.className = "p-4 rounded-2xl flex items-center gap-3 text-sm font-bold bg-emerald-50 border border-emerald-100 text-emerald-700 animate-in fade-in";
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />`;
+            } else {
+                alert.className = "p-4 rounded-2xl flex items-center gap-3 text-sm font-bold bg-rose-50 border border-rose-100 text-rose-700 animate-in fade-in";
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            }
+        }
+    </script>
+</body>
+</html>

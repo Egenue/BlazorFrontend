@@ -128,8 +128,13 @@
 @if (showCalculator)
 {
     <div class="fixed inset-0 z-[60] overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl relative">
-            <BlazorFrontend.Components.GaiaCalculator OnClose="CloseCalculator" />
+        <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button type="button" @onclick="CloseCalculator" class="absolute top-6 right-8 p-2 bg-white/10 hover:bg-white/20 text-white z-[70] rounded-full transition-all border border-white/10" title="Close Calculator">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <iframe src="gaia-calculator.html" class="w-full h-[750px] border-0 rounded-[2.5rem]" />
         </div>
     </div>
 }
