@@ -219,6 +219,6 @@
     private void CloseCalculator()
     {
         showCalculator = false;
-        // Optionally refresh data
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 }
