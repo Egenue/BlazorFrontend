@@ -50,8 +50,8 @@ namespace BlazorFrontend.Models
         [JsonPropertyName("weight")]
         public double? weight { get; set; }
 
-        [JsonPropertyName("bodyMassIndex")]
-        public BMI? bodyMassIndex { get; set; }
+        [JsonPropertyName("BMI")]
+        public double? BMI { get; set; }
 
         [JsonPropertyName("vitalSigns")]
         public VitalSignsInfo? vitalSigns { get; set; }

@@ -16,7 +16,7 @@ namespace BlazorFrontend.Models
         public string? Id { get; set; }
 
         [JsonPropertyName("sreeningId")]
-        public required string sreeningId { get; set; }
+        public string? sreeningId { get; set; }
 
         [JsonPropertyName("closeOutInterviewDate")]
         public DateTime closeOutInterviewDate { get; set; }

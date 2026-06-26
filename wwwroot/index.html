@@ -101,6 +101,15 @@
             }, 3500);
         };
 
+        window.registerGaiaListener = (dotNetRef) => {
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'gaia_apply') {
+                    dotNetRef.invokeMethodAsync('OnGaiaApplied', JSON.stringify(event.data.data))
+                        .catch(err => console.error("Error sending gaia_apply to .NET", err));
+                }
+            });
+        };
+
         window.inactivityTracker = {
             timer: null,
             dotNetRef: null,

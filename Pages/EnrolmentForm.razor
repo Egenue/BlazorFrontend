@@ -1,4 +1,5 @@
 @page "/enrolment"
+@implements IDisposable
 @inject ApiClient ApiClient
 @inject AppState AppState
 @inject NavigationManager NavigationManager
@@ -251,6 +252,68 @@
 
             <VitalAlerts Results="@(new List<ValidationResult?> { bpStatus, tempStatus, rrStatus, prStatus, heightStatus, bmiStatus })" />
         </div>
+ 
+        <!-- GAIA Parameters Area -->
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-2 gap-2">
+                <h3 class="text-md font-bold text-slate-900">
+                    Gestational Age &amp; GAIA Timeline
+                </h3>
+                <button type="button" disabled="@(string.IsNullOrEmpty(screeningId) || ReadOnly)" @onclick="OpenGaiaCalculator" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed text-indigo-700 font-bold hover:bg-indigo-100 rounded-lg text-xs transition-all cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Launch GAIA Calculator
+                </button>
+            </div>
+
+            @if (gaParamsCalculated)
+            {
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Ultrasound Date</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@(gaParameters.ultrasoundDate.HasValue ? DateUtils.FormatToDdmMmyyyy(gaParameters.ultrasoundDate.Value) : "N/A")</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">US Gestation Age</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@gaParameters.usWeeks Weeks, @gaParameters.usDays Days</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">LMP Date</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@(gaParameters.lmpDate.HasValue ? DateUtils.FormatToDdmMmyyyy(gaParameters.lmpDate.Value) : "N/A") (@gaParameters.lmpCertainty)</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Calculated Trimester</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@gaParameters.calculatedTrimester</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Pregnancy Start Date</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@(gaParameters.finalPregnancyStartDate.HasValue ? DateUtils.FormatToDdmMmyyyy(gaParameters.finalPregnancyStartDate.Value) : "N/A")</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">GA at Enrolment</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@((gaParameters.gaAtEnrolmentDays ?? 0) / 7) Weeks, @((gaParameters.gaAtEnrolmentDays ?? 0) % 7) Days</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Est. Due Date (EDD)</span>
+                        <strong class="text-slate-900 text-sm font-semibold">@(gaParameters.edd.HasValue ? DateUtils.FormatToDdmMmyyyy(gaParameters.edd.Value) : "N/A")</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">LOC Classification</span>
+                        <span class="text-xs font-bold @(gaParameters.loc?.Contains("NOT") == true ? "text-rose-600" : "text-emerald-600")">@gaParameters.loc</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>GAIA parameters have not been calculated yet. Launch the calculator to populate these fields.</span>
+                </div>
+            }
+        </div>
 
         @if (!ReadOnly)
         {
@@ -266,7 +329,7 @@
                 </button>
             </div>
         }
-
+ 
         @if (ReadOnly)
         {
             <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2 text-xs text-amber-800">
@@ -277,6 +340,20 @@
             </div>
         }
     </EditForm>
+ 
+    @if (showGaiaCalculator)
+    {
+        <div class="fixed inset-0 z-[60] overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+                <button type="button" @onclick="CloseGaiaCalculator" class="absolute top-6 right-8 p-2 bg-white/10 hover:bg-white/20 text-white z-[70] rounded-full transition-all border border-white/10" title="Close Calculator">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <iframe src="gaia-calculator.html?preselect=@screeningId&apply=true" class="w-full h-[750px] border-0 rounded-[2.5rem]" />
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -287,6 +364,10 @@
     public enrollmentforms? ExistingRecord { get; set; }
 
     private bool ReadOnly => AppState.CurrentUser?.Role == "technician" || (AppState.CurrentUser?.Role == "manager" && ExistingRecord != null);
+
+    private bool showGaiaCalculator = false;
+    private bool gaParamsCalculated = false;
+    private GaParams gaParameters = new();
 
     private string _screeningId = "";
     private string screeningId
@@ -373,12 +454,20 @@
             occupationOther = ExistingRecord.otherOccupation ?? "";
             _heightCm = ExistingRecord.height;
             _weightKg = ExistingRecord.weight;
+            BMI = ExistingRecord.BMI;
+            RecalculateBMI();
             temperatureC = ExistingRecord.vitalSigns?.temperature?.value;
             tempMethod = ExistingRecord.vitalSigns?.temperature?.location ?? "Oral";
             respiratoryRate = ExistingRecord.vitalSigns?.respiratoryRate;
             pulseRate = ExistingRecord.vitalSigns?.pulseRate;
             bloodPressureSys = ExistingRecord.vitalSigns?.bloodPressure?.systolic;
             bloodPressureDia = ExistingRecord.vitalSigns?.bloodPressure?.diastolic;
+
+            if (ExistingRecord.gaParameters != null && ExistingRecord.gaParameters.ultrasoundDate != null)
+            {
+                gaParameters = ExistingRecord.gaParameters;
+                gaParamsCalculated = true;
+            }
         }
     }
 
@@ -400,6 +489,9 @@
             pulseRate = origin.vitalSigns?.pulseRate;
             bloodPressureSys = origin.vitalSigns?.bloodPressure?.systolic;
             bloodPressureDia = origin.vitalSigns?.bloodPressure?.diastolic;
+
+            gaParameters = new GaParams();
+            gaParamsCalculated = false;
         }
     }
 
@@ -449,10 +541,7 @@
             otherOccupation = occupation == "Other" ? occupationOther : "",
             height = heightCm ?? 0,
             weight = weightKg ?? 0,
-            bodyMassIndex = new BlazorFrontend.Models.BMI{
-                value = 0,
-                unknown = false
-            },
+            BMI = BMI ?? 0,
             vitalSigns = new VitalSignsInfo
             {
                 temperature = new TempInfo { value = temperatureC ?? 0, location = tempMethod },
@@ -460,8 +549,8 @@
                 pulseRate = pulseRate ?? 0,
                 bloodPressure = new BloodPressureInfo { systolic = bloodPressureSys ?? 0, diastolic = bloodPressureDia ?? 0 }
             },
-            estGestAge = 0, // Should be calculated or carried over
-            gaParameters = new GaParams(), // To be populated properly
+            estGestAge = gaParameters.gaAtEnrolmentDays.HasValue ? (gaParameters.gaAtEnrolmentDays.Value / 7) : 0,
+            gaParameters = gaParameters,
             submittedAt = ExistingRecord?.submittedAt ?? DateTime.Now,
             createdAt = ExistingRecord?.createdAt ?? DateTime.Now,
             updatedAt = DateTime.Now
@@ -484,5 +573,56 @@
     private void Cancel()
     {
         NavigationManager.NavigateTo("/records");
+    }
+
+    private void OpenGaiaCalculator()
+    {
+        showGaiaCalculator = true;
+    }
+
+    private void CloseGaiaCalculator()
+    {
+        showGaiaCalculator = false;
+    }
+
+    private void ApplyGaiaParams(GaParams calculated)
+    {
+        gaParameters = calculated;
+        gaParamsCalculated = true;
+        showGaiaCalculator = false;
+    }
+
+    private DotNetObjectReference<EnrolmentForm>? objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerGaiaListener", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnGaiaApplied(string payloadJson)
+    {
+        try
+        {
+            var calculated = System.Text.Json.JsonSerializer.Deserialize<GaParams>(payloadJson);
+            if (calculated != null)
+            {
+                ApplyGaiaParams(calculated);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing GAIA apply payload: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
     }
 }
