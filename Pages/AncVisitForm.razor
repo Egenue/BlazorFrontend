@@ -2,6 +2,7 @@
 @inject ApiClient ApiClient
 @inject AppState AppState
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using BlazorFrontend.lib
 @using BlazorFrontend.Models
 
@@ -292,9 +293,14 @@
         if (ExistingRecord != null)
         {
             await ApiClient.DeleteAncVisit(record.visitNumber, AppState.CurrentUser?.Initials ?? "SYS", "Update Fallback");
+            await ApiClient.CreateAncVisit(record, AppState.CurrentUser?.Initials ?? "SYS");
+            await JSRuntime.InvokeVoidAsync("showToast", "ANC Visit record updated successfully!", "success");
         }
-        
-        await ApiClient.CreateAncVisit(record, AppState.CurrentUser?.Initials ?? "SYS");
+        else
+        {
+            await ApiClient.CreateAncVisit(record, AppState.CurrentUser?.Initials ?? "SYS");
+            await JSRuntime.InvokeVoidAsync("showToast", "ANC Visit record created successfully!", "success");
+        }
 
         NavigationManager.NavigateTo("/records");
     }

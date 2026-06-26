@@ -184,7 +184,7 @@
                                 @if (activeTable == "audit" && record is auditlogs aud)
                                 {
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px] font-medium text-slate-500">@aud.timestamp.ToString("g")</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@aud.userInitials</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-700">@GetUserFullName(aud.userInitials)</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-[10px]">
                                         <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold @(aud.action == "Create" || aud.action == "CREATE" ? "bg-emerald-50 text-emerald-700" : aud.action == "Update" || aud.action == "UPDATE" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-rose-700")">
                                             @aud.action
@@ -217,7 +217,7 @@
                                         </td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(scr)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -232,7 +232,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[80px]">@enr.educationLevel</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(enr)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -248,7 +248,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatDateUtil(anc.nextAppointment)</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(anc)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">PA</td>
                                         }
                                         else
                                         {
@@ -263,7 +263,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(del)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-red-700 text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -277,7 +277,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-rose-700 font-bold truncate max-w-[100px]">@(clo.participantStatus?.incompleteReason?.incompletionOptions ?? "Graduated")</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(clo)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">N/A</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-red-700 text-red-700">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -317,6 +317,31 @@
 @code {
     [CascadingParameter(Name = "DatabaseState")]
     public DatabaseState Db { get; set; } = default!;
+
+    [CascadingParameter]
+    public MainLayout MainLayout { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MainLayout != null)
+        {
+            await MainLayout.FetchDataFromBackend();
+        }
+    }
+
+    private string GetUserFullName(string initials)
+    {
+        if (string.IsNullOrWhiteSpace(initials)) return initials;
+        if (Db?.Logins == null) return initials;
+        
+        var user = Db.Logins.FirstOrDefault(u => string.Equals(u.userInitials, initials, StringComparison.OrdinalIgnoreCase));
+        if (user != null && !string.IsNullOrWhiteSpace(user.fullName))
+        {
+            return $"{user.fullName} ({initials})";
+        }
+        
+        return initials;
+    }
 
     private string activeTable = "screening";
     private string searchQuery = "";
@@ -513,8 +538,53 @@
 
     private void ViewRecord(object record)
     {
-        viewTable = activeTable;
-        viewRecord = record;
+        if (record is auditlogs aud)
+        {
+            object? clinicalRecord = null;
+            string targetTable = "";
+
+            if (string.Equals(aud.module, "Screening Form", StringComparison.OrdinalIgnoreCase))
+            {
+                clinicalRecord = Db.Screening.FirstOrDefault(r => r.screeningId == aud.recordId);
+                targetTable = "screening";
+            }
+            else if (string.Equals(aud.module, "Enrollment Form", StringComparison.OrdinalIgnoreCase))
+            {
+                clinicalRecord = Db.Enrolment.FirstOrDefault(r => r.screeningId == aud.recordId);
+                targetTable = "enrolment";
+            }
+            else if (string.Equals(aud.module, "ANC Visit", StringComparison.OrdinalIgnoreCase))
+            {
+                clinicalRecord = Db.Anc.FirstOrDefault(r => r.visitNumber == aud.recordId);
+                targetTable = "anc";
+            }
+            else if (string.Equals(aud.module, "Delivery Form", StringComparison.OrdinalIgnoreCase))
+            {
+                clinicalRecord = Db.Delivery.FirstOrDefault(r => r.deliveryScreeningId == aud.recordId);
+                targetTable = "delivery";
+            }
+            else if (string.Equals(aud.module, "Closeout Form", StringComparison.OrdinalIgnoreCase))
+            {
+                clinicalRecord = Db.Closeout.FirstOrDefault(r => r.sreeningId == aud.recordId);
+                targetTable = "closeout";
+            }
+
+            if (clinicalRecord != null)
+            {
+                viewTable = targetTable;
+                viewRecord = clinicalRecord;
+            }
+            else
+            {
+                viewTable = activeTable;
+                viewRecord = record;
+            }
+        }
+        else
+        {
+            viewTable = activeTable;
+            viewRecord = record;
+        }
     }
 
     private void EditRecord(object record)
@@ -530,7 +600,11 @@
         else if (activeTable == "closeout") await ApiClient.DeleteCloseoutForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
         else if (activeTable == "anc") await ApiClient.DeleteAncVisit(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
 
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        await JSRuntime.InvokeVoidAsync("showToast", "Record deleted successfully!", "success");
+        if (MainLayout != null)
+        {
+            await MainLayout.FetchDataFromBackend();
+        }
     }
 
     private void CloseModal()

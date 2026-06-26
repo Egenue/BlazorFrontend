@@ -250,16 +250,40 @@ namespace BlazorFrontend.Services
                 var response = await _http.GetAsync("getAuditLog");
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    return new List<auditlogs>(); // Return empty list instead of crashing
-                }else
+                    return new List<auditlogs>();
+                }
+                else
                 {
                     response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadFromJsonAsync<List<auditlogs>>() ?? new List<auditlogs>();
+                    var wrapper = await response.Content.ReadFromJsonAsync<AuditLogsResponse>();
+                    return wrapper?.data ?? new List<auditlogs>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiClient] GetAllAuditLogs error: {ex}");
+                return new List<auditlogs>();
+            }
+        }
+        
+        public async Task<List<Login>> GetAllLogins()
+        {
+            try
+            {
+                var response = await _http.GetAsync("allLogin");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<Login>();
+                }
+                else
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<List<Login>>() ?? new List<Login>();
                 }
             }
             catch
             {
-                return new List<auditlogs>();
+                return new List<Login>();
             }
         }
         
@@ -294,6 +318,12 @@ namespace BlazorFrontend.Services
         [JsonPropertyName("screeningDocs")]
         public List<screeningforms>? screeningDocs { get; set; }
     }
+
+    public class AuditLogsResponse
+    {
+        [JsonPropertyName("data")]
+        public List<auditlogs>? data { get; set; }
+    }
     
     public class DatabaseState
     {
@@ -304,6 +334,7 @@ namespace BlazorFrontend.Services
         public List<gestationages> Gestation { get; set; } = new();
         public List<ancvisits> Anc { get; set; } = new();
         public List<auditlogs> AuditLogs { get; set; } = new();
+        public List<Login> Logins { get; set; } = new();
     }
     
     public class CurrentUser

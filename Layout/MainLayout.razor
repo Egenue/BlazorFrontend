@@ -191,8 +191,9 @@ else
             var gestTask = ApiClient.GetAllGestAge();
             var ancTask = ApiClient.GetAllAncVisits();
             var auditTask = ApiClient.GetAllAuditLogs();
+            var loginsTask = ApiClient.GetAllLogins();
 
-            await Task.WhenAll(screenTask, enrollTask, delivTask, closeTask, gestTask, ancTask, auditTask);
+            await Task.WhenAll(screenTask, enrollTask, delivTask, closeTask, gestTask, ancTask, auditTask, loginsTask);
 
             Db = new DatabaseState
             {
@@ -202,7 +203,8 @@ else
                 Closeout = closeTask.Result,
                 Gestation = gestTask.Result,
                 Anc = ancTask.Result,
-                AuditLogs = auditTask.Result
+                AuditLogs = auditTask.Result,
+                Logins = loginsTask.Result
             };
         }
         catch (Exception ex)

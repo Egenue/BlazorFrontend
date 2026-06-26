@@ -162,8 +162,8 @@
                             </span>
                         </div>
                         <div>
-                            <span class="text-[10px] uppercase text-slate-400 font-bold block">User (Initials)</span>
-                            <strong class="text-sm text-indigo-700 font-bold">@aud.userInitials</strong>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block">User (Full Name)</span>
+                            <strong class="text-sm text-indigo-700 font-bold">@GetUserFullName(aud.userInitials)</strong>
                         </div>
                         <div>
                             <span class="text-[10px] uppercase text-slate-400 font-bold block">Timestamp</span>
@@ -277,7 +277,7 @@
                                                 <span class="text-[10px] text-slate-500 font-medium">@log.timestamp.ToString("g")</span>
                                             </div>
                                             <div class="text-[10px] font-mono text-slate-500">
-                                                By: <span class="font-bold text-indigo-700">@log.userInitials</span>
+                                                By: <span class="font-bold text-indigo-700">@GetUserFullName(log.userInitials)</span>
                                             </div>
                                         </div>
 
@@ -518,5 +518,19 @@
         if (Record is closeoutforms clo) return clo.submittedAt.ToString("g") ?? "N/A";
         if (Record is auditlogs aud) return aud.timestamp.ToString("g") ?? "N/A";
         return "N/A";
+    }
+
+    private string GetUserFullName(string initials)
+    {
+        if (string.IsNullOrWhiteSpace(initials)) return initials;
+        if (Db?.Logins == null) return initials;
+        
+        var user = Db.Logins.FirstOrDefault(u => string.Equals(u.userInitials, initials, StringComparison.OrdinalIgnoreCase));
+        if (user != null && !string.IsNullOrWhiteSpace(user.fullName))
+        {
+            return $"{user.fullName} ({initials})";
+        }
+        
+        return initials;
     }
 }

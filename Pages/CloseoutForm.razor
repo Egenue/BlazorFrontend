@@ -2,6 +2,7 @@
 @inject ApiClient ApiClient
 @inject AppState AppState
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using BlazorFrontend.lib
 @using BlazorFrontend.Models
 
@@ -301,10 +302,12 @@
         if (ExistingRecord != null)
         {
             await ApiClient.UpdateCloseoutForm(record.sreeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+            await JSRuntime.InvokeVoidAsync("showToast", "Closeout record updated successfully!", "success");
         }
         else
         {
             await ApiClient.CreateCloseoutForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+            await JSRuntime.InvokeVoidAsync("showToast", "Closeout record created successfully!", "success");
         }
 
         NavigationManager.NavigateTo("/records");

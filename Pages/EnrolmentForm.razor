@@ -2,6 +2,7 @@
 @inject ApiClient ApiClient
 @inject AppState AppState
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using BlazorFrontend.lib
 
 <div class="bg-white border border-slate-150 rounded-2xl shadow-xs p-6 md:p-8 space-y-8 max-w-5xl mx-auto shadow-violet-100/30">
@@ -469,10 +470,12 @@
         if (ExistingRecord != null)
         {
             await ApiClient.UpdateEnrollmentForm(record.screeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+            await JSRuntime.InvokeVoidAsync("showToast", "Enrolment record updated successfully!", "success");
         }
         else
         {
             await ApiClient.CreateEnrollmentForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+            await JSRuntime.InvokeVoidAsync("showToast", "Enrolment record created successfully!", "success");
         }
 
         NavigationManager.NavigateTo("/records");

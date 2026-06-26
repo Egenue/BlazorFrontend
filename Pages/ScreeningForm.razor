@@ -2,6 +2,7 @@
 @inject ApiClient ApiClient
 @inject AppState AppState
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using BlazorFrontend.lib
 
 <div class="bg-white border border-slate-150 rounded-2xl shadow-xs p-5 md:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto shadow-indigo-100/30">
@@ -622,10 +623,12 @@
         if (ExistingRecord != null)
         {
             await ApiClient.UpdateScreeningForm(record.screeningId, record, AppState.CurrentUser?.Initials ?? "SYS", "Update");
+            await JSRuntime.InvokeVoidAsync("showToast", "Screening record updated successfully!", "success");
         }
         else
         {
             await ApiClient.CreateScreeningForm(record, AppState.CurrentUser?.Initials ?? "SYS");
+            await JSRuntime.InvokeVoidAsync("showToast", "Screening record created successfully!", "success");
         }
 
         NavigationManager.NavigateTo("/records");
