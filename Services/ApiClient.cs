@@ -38,11 +38,13 @@ namespace BlazorFrontend.Services
 
         public async Task CreateScreeningForm(screeningforms record, string userInitials)
         {
+            record._id = null;
             await _http.PostAsJsonAsync("createScreeningForm", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateScreeningForm(string id, screeningforms record, string userInitials, string reason)
         {
+            record._id = null;
             await _http.PutAsJsonAsync($"updateScreeningForm/{id}", new { record, userInitials, reason });
         }
 
@@ -78,11 +80,13 @@ namespace BlazorFrontend.Services
 
         public async Task CreateEnrollmentForm(enrollmentforms record, string userInitials)
         {
+            record.Id = null;
             await _http.PostAsJsonAsync("createEnrollment", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateEnrollmentForm(string id, enrollmentforms record, string userInitials, string reason)
         {
+            record.Id = null;
             await _http.PutAsJsonAsync($"updateEnrollment/{id}", new { record, userInitials, reason });
         }
 
@@ -119,11 +123,13 @@ namespace BlazorFrontend.Services
 
         public async Task CreateDeliveryForm(deliveryforms record, string userInitials)
         {
+            record.Id = null;
             await _http.PostAsJsonAsync("createDelivery", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateDeliveryForm(string id, deliveryforms record, string userInitials, string reason)
         {
+            record.Id = null;
             await _http.PutAsJsonAsync($"updateDelivery/{id}", new { record, userInitials, reason });
         }
 
@@ -159,11 +165,13 @@ namespace BlazorFrontend.Services
 
         public async Task CreateCloseoutForm(closeoutforms record, string userInitials)
         {
+            record.Id = null;
             await _http.PostAsJsonAsync("createCloseout", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateCloseoutForm(string id, closeoutforms record, string userInitials, string reason)
         {
+            record.Id = null;
             await _http.PutAsJsonAsync($"updateCloseout/{id}", new { record, userInitials, reason });
         }
 
@@ -199,6 +207,7 @@ namespace BlazorFrontend.Services
 
         public async Task CreateAncVisit(ancvisits record, string userInitials)
         {
+            record.Id = null;
             await _http.PostAsJsonAsync("createAncVisit", new { record, userInitials, reason = "Initial Entry" });
         }
 
@@ -234,11 +243,13 @@ namespace BlazorFrontend.Services
 
         public async Task CreateGestAge(gestationages record, string userInitials)
         {
+            record.Id = null;
             await _http.PostAsJsonAsync("createGestAge", new { record, userInitials, reason = "Initial Entry" });
         }
 
         public async Task UpdateGestAge(string id, gestationages record, string userInitials, string reason)
         {
+            record.Id = null;
             await _http.PutAsJsonAsync($"updateGestAge/{id}", new { record, userInitials, reason });
         }
 
@@ -325,7 +336,11 @@ namespace BlazorFrontend.Services
     
     public class UserData
     {
+        public string email { get; set; } = string.Empty;
+        public string userName { get; set; } = string.Empty;
+        public string fullName { get; set; } = string.Empty;
         public string userRole { get; set; } = string.Empty;
+        public string userInitials { get; set; } = string.Empty;
     }
 
     public class ScreeningFormsResponse

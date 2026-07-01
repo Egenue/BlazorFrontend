@@ -350,7 +350,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                <iframe src="gaia-calculator.html?preselect=@screeningId&apply=true" class="w-full h-[750px] border-0 rounded-[2.5rem]" />
+                <iframe src="gaia-calculator.html?preselect=@screeningId&apply=true&initials=@(AppState.CurrentUser?.Initials ?? "SYS")" class="w-full h-[750px] border-0 rounded-[2.5rem]" />
             </div>
         </div>
     }

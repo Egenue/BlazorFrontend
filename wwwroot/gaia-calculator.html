@@ -190,6 +190,7 @@
         let screeningList = [];
         let isIframe = false;
         let calculatedResult = null;
+        let userInitials = 'SYS';
 
         // Date Utilities
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -227,6 +228,10 @@
 
             // Handle pre-select parameters
             const urlParams = new URLSearchParams(window.location.search);
+            const initialsParam = urlParams.get('initials');
+            if (initialsParam) {
+                userInitials = initialsParam;
+            }
             const preselectId = urlParams.get('preselect');
             if (preselectId) {
                 document.getElementById('id-search').value = preselectId;
@@ -587,7 +592,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             record: gestationPayload,
-                            userInitials: 'SYS',
+                            userInitials: userInitials,
                             reason: 'Update via Standalone Calc'
                         })
                     });
@@ -597,7 +602,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             record: gestationPayload,
-                            userInitials: 'SYS'
+                            userInitials: userInitials
                         })
                     });
                 }
@@ -632,7 +637,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 record: enr,
-                                userInitials: 'SYS',
+                                userInitials: userInitials,
                                 reason: 'Calc Sync'
                             })
                         });

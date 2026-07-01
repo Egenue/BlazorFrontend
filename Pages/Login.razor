@@ -168,19 +168,19 @@
         {
             var result = await ApiClient.UserLogin(email.Trim(), username.Trim(), fullName.Trim(), password);
             
-            var actualName = !string.IsNullOrWhiteSpace(fullName) ? fullName.Trim() : username;
-            var userInitials = GetInitials(actualName);
+            var actualName = !string.IsNullOrWhiteSpace(result.user?.fullName) ? result.user.fullName : (!string.IsNullOrWhiteSpace(fullName) ? fullName.Trim() : username);
+            var userInitials = !string.IsNullOrWhiteSpace(result.user?.userInitials) ? result.user.userInitials : GetInitials(actualName);
             
             var backendUserRole = result.user?.userRole ?? role;
             var mappedRole = MapRole(backendUserRole);
 
             var currentUser = new CurrentUser
             {
-                Username = username.Trim(),
+                Username = !string.IsNullOrWhiteSpace(result.user?.userName) ? result.user.userName : username.Trim(),
                 FullName = actualName,
                 Initials = userInitials,
                 Role = mappedRole,
-                Email = email.Trim()
+                Email = !string.IsNullOrWhiteSpace(result.user?.email) ? result.user.email : email.Trim()
             };
 
             AppState.Login(currentUser);
