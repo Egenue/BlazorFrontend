@@ -255,8 +255,23 @@ namespace BlazorFrontend.Services
                 else
                 {
                     response.EnsureSuccessStatusCode();
-                    var wrapper = await response.Content.ReadFromJsonAsync<AuditLogsResponse>();
-                    return wrapper?.data ?? new List<auditlogs>();
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(jsonString))
+                    {
+                        return new List<auditlogs>();
+                    }
+
+                    var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    if (jsonString.TrimStart().StartsWith("["))
+                    {
+                        var logs = System.Text.Json.JsonSerializer.Deserialize<List<auditlogs>>(jsonString, options);
+                        return logs ?? new List<auditlogs>();
+                    }
+                    else
+                    {
+                        var wrapper = System.Text.Json.JsonSerializer.Deserialize<AuditLogsResponse>(jsonString, options);
+                        return wrapper?.data ?? new List<auditlogs>();
+                    }
                 }
             }
             catch (Exception ex)

@@ -148,6 +148,7 @@
     {
         fixingRecord = null;
         fixingModule = "";
+        RefreshIssues();
         StateHasChanged();
     }
 
@@ -163,45 +164,68 @@
 
     protected override void OnParametersSet()
     {
+        RefreshIssues();
+    }
+
+    private void RefreshIssues()
+    {
         Issues.Clear();
 
-        foreach (var r in Db.Screening)
-        {
-            if (r.BMI > 30) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High BMI: {r.BMI}", Type = "warning" });
-            if (r.BMI < 18.5 && r.BMI > 0) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"Low BMI: {r.BMI}", Type = "warning" });
-            if (r.vitalSigns?.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High Systolic BP: {r.vitalSigns.bloodPressure.systolic}", Type = "error" });
-            if (r.vitalSigns?.temperature?.value > 38) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High Temperature: {r.vitalSigns.temperature.value}", Type = "error" });
-        }
+        if (Db == null) return;
 
-        foreach (var r in Db.Enrolment)
+        if (Db.Screening != null)
         {
-            double enrBmi = 0;
-            if (r.height.HasValue && r.height > 0 && r.weight.HasValue && r.weight > 0)
+            foreach (var r in Db.Screening)
             {
-                double hm = r.height.Value / 100.0;
-                enrBmi = Math.Round(r.weight.Value / (hm * hm), 1);
+                if (r.BMI > 30) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High BMI: {r.BMI:F1}", Type = "warning" });
+                if (r.BMI < 18.5 && r.BMI > 0) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"Low BMI: {r.BMI:F1}", Type = "warning" });
+                if (r.vitalSigns?.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High Systolic BP: {r.vitalSigns.bloodPressure.systolic}", Type = "error" });
+                if (r.vitalSigns?.temperature?.value > 38) Issues.Add(new DataIssue { RecordId = r.screeningId, Module = "Screening", IssueDescription = $"High Temperature: {r.vitalSigns.temperature.value:F1}°C", Type = "error" });
             }
-
-            if (enrBmi > 30) Issues.Add(new DataIssue { RecordId = r.screeningId ?? "", Module = "Enrollment", IssueDescription = $"High BMI: {enrBmi}", Type = "warning" });
-            if (r.gaParameters == null || r.gaParameters.edd == default) Issues.Add(new DataIssue { RecordId = r.screeningId ?? "", Module = "Enrollment", IssueDescription = "Missing Estimated Date of Delivery (EDD)", Type = "error" });
         }
 
-        foreach (var r in Db.Delivery)
+        if (Db.Enrolment != null)
         {
-            if (r.physicalExam?.vitalSigns?.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.deliveryScreeningId ?? "", Module = "Delivery", IssueDescription = $"High BP: {r.physicalExam.vitalSigns.bloodPressure.systolic}/{r.physicalExam.vitalSigns.bloodPressure.diastolic}", Type = "error" });
-        }
-
-        foreach (var r in Db.Anc)
-        {
-            if (r.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.visitNumber ?? "", Module = "ANC", IssueDescription = $"High Systolic BP: {r.bloodPressure.systolic} at visit {r.visitNumber}", Type = "warning" });
-            if (r.nextAppointment == default) Issues.Add(new DataIssue { RecordId = r.visitNumber ?? "", Module = "ANC", IssueDescription = "Missing Next Appointment Date", Type = "error" });
-        }
-
-        foreach (var r in Db.Closeout)
-        {
-            if (r.participantStatus?.choicesStudy == "Completed study visits" && !Db.Delivery.Any(d => d.deliveryScreeningId == r.sreeningId))
+            foreach (var r in Db.Enrolment)
             {
-                 Issues.Add(new DataIssue { RecordId = r.sreeningId ?? "", Module = "Closeout", IssueDescription = "Marked as Completed but no Delivery record found", Type = "warning" });
+                double enrBmi = 0;
+                if (r.height.HasValue && r.height > 0 && r.weight.HasValue && r.weight > 0)
+                {
+                    double hm = r.height.Value / 100.0;
+                    enrBmi = Math.Round(r.weight.Value / (hm * hm), 1);
+                }
+
+                if (enrBmi > 30) Issues.Add(new DataIssue { RecordId = r.screeningId ?? "", Module = "Enrollment", IssueDescription = $"High BMI: {enrBmi:F1}", Type = "warning" });
+                if (r.gaParameters == null || !r.gaParameters.edd.HasValue || r.gaParameters.edd.Value == default || r.gaParameters.edd.Value == DateTime.MinValue) 
+                    Issues.Add(new DataIssue { RecordId = r.screeningId ?? "", Module = "Enrollment", IssueDescription = "Missing Estimated Date of Delivery (EDD)", Type = "error" });
+            }
+        }
+
+        if (Db.Delivery != null)
+        {
+            foreach (var r in Db.Delivery)
+            {
+                if (r.physicalExam?.vitalSigns?.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.deliveryScreeningId ?? "", Module = "Delivery", IssueDescription = $"High BP: {r.physicalExam.vitalSigns.bloodPressure.systolic}/{r.physicalExam.vitalSigns.bloodPressure.diastolic}", Type = "error" });
+            }
+        }
+
+        if (Db.Anc != null)
+        {
+            foreach (var r in Db.Anc)
+            {
+                if (r.bloodPressure?.systolic > 140) Issues.Add(new DataIssue { RecordId = r.visitNumber ?? "", Module = "ANC", IssueDescription = $"High Systolic BP: {r.bloodPressure.systolic} at visit {r.visitNumber}", Type = "warning" });
+                if (r.nextAppointment == default || r.nextAppointment == DateTime.MinValue) Issues.Add(new DataIssue { RecordId = r.visitNumber ?? "", Module = "ANC", IssueDescription = "Missing Next Appointment Date", Type = "error" });
+            }
+        }
+
+        if (Db.Closeout != null)
+        {
+            foreach (var r in Db.Closeout)
+            {
+                if (r.participantStatus?.choicesStudy == "Completed study visits" && !Db.Delivery.Any(d => d.deliveryScreeningId == r.sreeningId))
+                {
+                     Issues.Add(new DataIssue { RecordId = r.sreeningId ?? "", Module = "Closeout", IssueDescription = "Marked as Completed but no Delivery record found", Type = "warning" });
+                }
             }
         }
     }

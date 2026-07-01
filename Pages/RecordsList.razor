@@ -25,13 +25,13 @@
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button @onclick="DownloadCSV" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-105 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
+                <button @onclick="DownloadCSV" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Download CSV
                 </button>
-                <button @onclick="DownloadJSON" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-105 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
+                <button @onclick="DownloadJSON" disabled="@(FilteredAndSortedRecords().Count == 0)" class="px-3 py-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer">
                     <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
@@ -98,13 +98,13 @@
                         @if (activeTable == "screening")
                         {
                             <tr>
-                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("ScreeningId"))">
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("ScreeningId"))">
                                     <div class="flex items-center gap-1">ID <SortIcon /></div>
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("HealthFacility"))">
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("HealthFacility"))">
                                     <div class="flex items-center gap-1">Facility <SortIcon /></div>
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("InterviewDate"))">
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("InterviewDate"))">
                                     <div class="flex items-center gap-1">Date <SortIcon /></div>
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Age</th>
@@ -117,10 +117,12 @@
                         else if (activeTable == "enrolment")
                         {
                             <tr>
-                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer" @onclick="@(() => RequestSort("ScreeningId"))">
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("ScreeningId"))">
                                     <div class="flex items-center gap-1">ID <SortIcon /></div>
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Facility</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("HealthFacility"))">
+                                    <div class="flex items-center gap-1">Facility <SortIcon /></div>
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Village</th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BMI</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Education</th>
@@ -131,8 +133,12 @@
                         else if (activeTable == "anc")
                         {
                             <tr>
-                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Visit/ID</th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("ScreeningId"))">
+                                    <div class="flex items-center gap-1">Visit/ID <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("VisitDate"))">
+                                    <div class="flex items-center gap-1">Date <SortIcon /></div>
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">GA</th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wt</th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BP</th>
@@ -144,8 +150,12 @@
                         else if (activeTable == "delivery")
                         {
                             <tr>
-                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID</th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Del Date</th>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("ScreeningId"))">
+                                    <div class="flex items-center gap-1">ID <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("InterviewDate"))">
+                                    <div class="flex items-center gap-1">Del Date <SortIcon /></div>
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Loc</th>
                                 <th scope="col" class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">BMI</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mode</th>
@@ -156,8 +166,12 @@
                         else if (activeTable == "closeout")
                         {
                             <tr>
-                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID</th>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Term Date</th>
+                                <th scope="col" class="w-28 px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("ScreeningId"))">
+                                    <div class="flex items-center gap-1">ID <SortIcon /></div>
+                                </th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("CloseOutInterviewDate"))">
+                                    <div class="flex items-center gap-1">Term Date <SortIcon /></div>
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">By</th>
@@ -167,7 +181,9 @@
                         else if (activeTable == "audit")
                         {
                             <tr>
-                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Timestamp</th>
+                                <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors" @onclick="@(() => RequestSort("Timestamp"))">
+                                    <div class="flex items-center gap-1">Timestamp <SortIcon /></div>
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">User</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
                                 <th scope="col" class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Module</th>
@@ -217,7 +233,7 @@
                                         </td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(scr)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">SYSTEM</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -232,7 +248,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[80px]">@enr.educationLevel</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(enr)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">SYSTEM</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -248,7 +264,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-indigo-600">@DateUtils.FormatDateUtil(anc.nextAppointment)</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(anc)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-red-700 text-slate-400">PA</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">PA</td>
                                         }
                                         else
                                         {
@@ -263,7 +279,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-slate-500 truncate max-w-[100px]">@del.deliveryHistory?.deliveryMode?.choices</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(del)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-red-700 text-slate-400">SYSTEM</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -277,7 +293,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap text-[10px] text-rose-700 font-bold truncate max-w-[100px]">@(clo.participantStatus?.incompleteReason?.incompletionOptions ?? "Graduated")</td>
                                         @if (string.IsNullOrEmpty(GetRecordSubmitter(clo)))
                                         {
-                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-bold text-red-700 text-red-700">SYSTEM</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-[10px] font-mono text-slate-400">SYSTEM</td>
                                         }
                                         else
                                         {
@@ -311,6 +327,44 @@
     @if (viewTable != null && viewRecord != null)
     {
         <RecordDetailModal Table="@viewTable" Record="@viewRecord" OnClose="CloseModal" />
+    }
+
+    @if (editingRecord != null)
+    {
+        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl relative">
+                <div class="absolute right-6 top-6 z-10">
+                    <button @onclick="CloseEdit" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-all">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="p-1">
+                    @if (editingTable == "screening" && editingRecord is screeningforms scr)
+                    {
+                        <ScreeningForm ExistingRecord="scr" />
+                    }
+                    else if (editingTable == "enrolment" && editingRecord is enrollmentforms enr)
+                    {
+                        <EnrolmentForm ExistingRecord="enr" />
+                    }
+                    else if (editingTable == "delivery" && editingRecord is deliveryforms del)
+                    {
+                        <DeliveryForm ExistingRecord="del" />
+                    }
+                    else if (editingTable == "anc" && editingRecord is ancvisits anc)
+                    {
+                        <AncVisitForm ExistingRecord="anc" />
+                    }
+                    else if (editingTable == "closeout" && editingRecord is closeoutforms clo)
+                    {
+                        <CloseoutForm ExistingRecord="clo" />
+                    }
+                </div>
+            </div>
+        </div>
     }
 </div>
 
@@ -371,11 +425,23 @@
         new TabInfo { Id = "audit", Label = "Audit Logs", Count = Db.AuditLogs.Count }
     };
 
+    private string? editingTable;
+    private object? editingRecord;
+
     private void SetActiveTable(string table)
     {
         activeTable = table;
         searchQuery = "";
-        sortField = table == "anc" ? "VisitDate" : table == "closeout" ? "CloseOutInterviewDate" : table == "audit" ? "Timestamp" : "SubmittedAt";
+        sortField = table switch
+        {
+            "anc" => "VisitDate",
+            "closeout" => "CloseOutInterviewDate",
+            "audit" => "Timestamp",
+            "screening" => "InterviewDate",
+            "delivery" => "InterviewDate",
+            "enrolment" => "SubmittedAt",
+            _ => "InterviewDate"
+        };
     }
 
     private void RequestSort(string field)
@@ -496,7 +562,7 @@
         {
             var sId = GetRecordId(record) ?? "";
             var submitter = GetRecordSubmitter(record) ?? "";
-            var village = record is enrollmentforms enr ? enr.villageOfResidence : "";
+            var village = record is enrollmentforms enr ? (enr.villageOfResidence ?? "") : "";
 
             bool matchesQuery = string.IsNullOrEmpty(searchQuery) ||
                                 sId.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
@@ -523,15 +589,34 @@
 
     private object GetSortValue(object record, string field)
     {
-        if (field == "ScreeningId") return GetRecordId(record);
-        if (field == "HealthFacility") return GetRecordFacility(record);
-        if (field == "InterviewDate" && record is screeningforms scr) return scr.interviewDate;
-        if (field == "InterviewDate" && record is deliveryforms del) return del.interviewDate;
-        if (field == "CloseOutInterviewDate" && record is closeoutforms clo) return clo.closeOutInterviewDate;
-        if (field == "VisitDate" && record is ancvisits anc) return anc.visitDate;
-        if (field == "Timestamp" && record is auditlogs aud) return aud.timestamp;
+        if (field == "ScreeningId") return GetRecordId(record) ?? "";
+        if (field == "HealthFacility") return GetRecordFacility(record) ?? "";
         
-        if (record is enrollmentforms enr) return enr.submittedAt;
+        if (field == "InterviewDate")
+        {
+            if (record is screeningforms scr1) return scr1.interviewDate;
+            if (record is deliveryforms del1) return del1.interviewDate ?? DateTime.MinValue;
+            if (record is closeoutforms clo1) return clo1.closeOutInterviewDate;
+        }
+        
+        if (field == "CloseOutInterviewDate" && record is closeoutforms clo2) return clo2.closeOutInterviewDate;
+        if (field == "VisitDate" && record is ancvisits anc1) return anc1.visitDate;
+        if (field == "Timestamp" && record is auditlogs aud1) return aud1.timestamp;
+        
+        if (field == "SubmittedAt")
+        {
+            if (record is enrollmentforms enr1) return enr1.submittedAt ?? DateTime.MinValue;
+            if (record is screeningforms scr2) return scr2.createdAt;
+            if (record is closeoutforms clo3) return clo3.submittedAt;
+        }
+
+        // Fallback properties
+        if (record is screeningforms s) return s.interviewDate;
+        if (record is enrollmentforms e) return e.submittedAt ?? DateTime.MinValue;
+        if (record is ancvisits a) return a.visitDate;
+        if (record is deliveryforms d) return d.interviewDate ?? DateTime.MinValue;
+        if (record is closeoutforms cl) return cl.closeOutInterviewDate;
+        if (record is auditlogs au) return au.timestamp;
 
         return "";
     }
@@ -589,11 +674,15 @@
 
     private void EditRecord(object record)
     {
-        NavigationManager.NavigateTo($"/{activeTable}");
+        editingTable = activeTable;
+        editingRecord = record;
     }
 
     private async Task DeleteRecord(string id)
     {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to permanently delete record {id}?");
+        if (!confirmed) return;
+
         if (activeTable == "screening") await ApiClient.DeleteScreeningForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
         else if (activeTable == "enrolment") await ApiClient.DeleteEnrollmentForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
         else if (activeTable == "delivery") await ApiClient.DeleteDeliveryForm(id, AppState.CurrentUser?.Initials ?? "", "Deleted via UI");
@@ -604,6 +693,16 @@
         if (MainLayout != null)
         {
             await MainLayout.FetchDataFromBackend();
+        }
+    }
+
+    private void CloseEdit()
+    {
+        editingTable = null;
+        editingRecord = null;
+        if (MainLayout != null)
+        {
+            _ = MainLayout.FetchDataFromBackend().ContinueWith(_ => InvokeAsync(StateHasChanged));
         }
     }
 
