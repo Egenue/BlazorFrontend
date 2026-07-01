@@ -476,6 +476,7 @@
         var origin = Db.Screening.FirstOrDefault(s => s.screeningId == _screeningId);
         if (origin != null && ExistingRecord == null)
         {
+            _screeningId = origin.screeningId;
             facility = origin.healthFacility ?? "Bondo";
             dateOfBirth = origin.DoB;
             ageYears = origin.Age?.years ?? 0;

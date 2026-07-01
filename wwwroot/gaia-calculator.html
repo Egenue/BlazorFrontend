@@ -632,14 +632,18 @@
                             loc: calculatedResult.loc
                         };
 
+                        const updatePayload = {
+                            ...enr,
+                            userInitials: userInitials,
+                            reason: 'Calc Sync'
+                        };
+                        delete updatePayload._id;
+                        delete updatePayload.__v;
+
                         await fetch(`${apiBaseUrl}updateEnrollment/${selectedParticipantId}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                record: enr,
-                                userInitials: userInitials,
-                                reason: 'Calc Sync'
-                            })
+                            body: JSON.stringify(updatePayload)
                         });
                     }
                 }

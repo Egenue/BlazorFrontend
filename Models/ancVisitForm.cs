@@ -13,7 +13,7 @@ namespace BlazorFrontend.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonPropertyName("_id")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore]
         public string? Id { get; set; }
 
         [JsonPropertyName("visitNumber")]

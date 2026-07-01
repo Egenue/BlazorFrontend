@@ -86,8 +86,11 @@ namespace BlazorFrontend.Services
 
         public async Task UpdateEnrollmentForm(string id, enrollmentforms record, string userInitials, string reason)
         {
-            record.Id = null;
-            await _http.PutAsJsonAsync($"updateEnrollment/{id}", new { record, userInitials, reason });
+            var json = System.Text.Json.JsonSerializer.Serialize(record);
+            var dict = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object>>(json) ?? new();
+            dict["userInitials"] = userInitials;
+            dict["reason"] = reason;
+            await _http.PutAsJsonAsync($"updateEnrollment/{id}", dict);
         }
 
         public async Task DeleteEnrollmentForm(string id, string userInitials, string reason)
